@@ -1,0 +1,94 @@
+#### **Nimk's Video Downloader** v1.0.0r
+
+
+
+Удобный загрузчик видео, состоящий из браузерного chromium-расширения и go-приложения.
+С его помощью вы сможете скачивать видео с YouTube или YouTube Music в разных форматах.
+
+
+
+##### 🛠 Стек технологий
+
+* **go** **1.26.4**
+* **yt-dlp**
+* **ffmpeg**
+* **html5**
+* **javascript**
+
+
+
+##### 🚀 Гайд по установке
+
+
+
+* ###### Установка расширения:
+1. Откройте браузер на основе chromium
+2. Перейдите в настройки расширений через UI или по ссылке (обычно: \[название браузера]://extensions)
+3. Включите режим разработчика (обычно переключатель в правом верхнем углу)
+4. Найдите кнопку "Загрузить распакованное расширение"
+5. Вставьте путь до папки "video-downloader-extension"
+
+
+
+* ###### Установка приложения:
+1. Перейдите в папку "video-downloader-app"
+2. Выберите путь загрузки видео в config.env (все недостающие папки будут автоматически созданы)
+3. Запустите файл "video-downloader-build.exe"
+4. Подождите несколько минут (первый запуск идёт долго из-за установки зависимостей)
+5. С этого момента приложение должно запуститься и добавиться в автозагрузку
+
+
+
+* *В случае возникновения ошибок проверьте файл логов по пути "nvd/video-downloader-app/app.log"*
+
+
+
+##### 💻 Пример использования
+
+
+
+1. Зайдите на страницу с любым видео или треком на YouTube или YouTube Music
+2. Откройте меню расширения и выберите формат загружаемого файла
+3. Нажмите кнопку "Скачать" и ожидайте загрузки (чем больше видео, тем дольше она будет идти)
+4. Проверьте папку, которую указывали в config.env
+
+
+
+* *Во время загрузки могут создаваться временные файлы (.part) или видео в неправильном формате, не трогайте их, они сами удалятся после окончания загрузки*
+
+
+
+###### Third-party licenses / Лицензии третьих сторон
+
+
+
+This project uses yt-dlp (yt-dlp.exe) for video downloading. Yt-dlp is licensed under The Unlicense. Official yt-dlp website: github.com/yt-dlp/yt-dlp.
+
+This project uses ffmpeg (ffmpeg.exe) to convert video formats. FFmpeg is licensed under GNU Lesser General Public License (LGPL) version 2.1, but this project
+
+uses build from https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip which has GNU General Public License (GPL).
+
+Official ffmpeg website: www.ffmpeg.org. FFmpeg source code: https://github.com/ffmpeg/ffmpeg.
+
+
+
+Этот проект использует yt-dlp (yt-dlp.exe) для загрузки видео. Yt-dlp имеет лицензию "The Unlicense". Официальный сайт yt-dlp: github.com/yt-dlp/yt-dlp.
+
+Этот проект использует ffmpeg (ffmpeg.exe) для конвертации форматов видео. FFmpeg имеет лицензию "GNU Lesser General Public License (LGPL) version 2.1", однако
+
+проект использует билд из https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip, который использует GNU General Public License (GPL).
+
+Официальный сайт ffmpeg: www.ffmpeg.org. Исходный код ffmpeg: https://github.com/ffmpeg/ffmpeg.
+
+
+
+###### License / Лицензия
+
+
+
+This project is licensed under the GPL-3.0 License - see the LICENSE file for details.
+
+
+
+Этот проект распространяется под лицензией GPL-3.0. Подробнее смотерть в файле LICENSE.
+
