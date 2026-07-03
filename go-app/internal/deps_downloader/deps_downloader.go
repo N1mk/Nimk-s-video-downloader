@@ -33,7 +33,7 @@ func installYtDlp(installLink string, exeDir string) error {
 	return nil
 }
 
-func installFFmpeg(installLink string, exeDir string, dl *logger.DownloaderLogger) error {
+func installFFmpeg(installLink string, exeDir string) error {
 	resp, err := http.Get(installLink)
 	if err != nil {
 		return err
@@ -44,8 +44,6 @@ func installFFmpeg(installLink string, exeDir string, dl *logger.DownloaderLogge
 	}
 
 	tmpPath := filepath.Join(exeDir, "ffmpeg.zip")
-
-	dl.LogInfo("Создание временного файла")
 	tmp, err := os.Create(tmpPath)
 	if err != nil {
 		return err
@@ -53,12 +51,10 @@ func installFFmpeg(installLink string, exeDir string, dl *logger.DownloaderLogge
 	defer os.Remove(tmpPath)
 	defer tmp.Close()
 
-	dl.LogInfo("Начало скачивания zip архива")
 	if _, err := io.Copy(tmp, resp.Body); err != nil {
 		return err
 	}
 
-	dl.LogInfo("Начало чтения zip архива")
 	r, err := zip.OpenReader(tmpPath)
 	if err != nil {
 		return err
@@ -66,22 +62,17 @@ func installFFmpeg(installLink string, exeDir string, dl *logger.DownloaderLogge
 	defer r.Close()
 	for _, f := range r.File {
 		if filepath.Base(f.Name) == "ffmpeg.exe" {
-			dl.LogInfo("Найден ffmpeg file")
 			rc, err := f.Open()
 			if err != nil {
 				return err
 			}
 			defer rc.Close()
 
-			dl.LogInfo("FFmpeg file открыт")
-
 			dst, err := os.Create(filepath.Join(exeDir, "ffmpeg.exe"))
 			if err != nil {
 				return err
 			}
 			defer dst.Close()
-
-			dl.LogInfo("Создан ffmpeg.exe")
 
 			if _, err := io.Copy(dst, rc); err != nil {
 				return err
@@ -114,7 +105,7 @@ func DownloadDeps(dl *logger.DownloaderLogger) error {
 
 	if _, err := os.Stat(filepath.Join(exeDir, "ffmpeg.exe")); os.IsNotExist(err) {
 		dl.LogInfo("FFmpeg not found. Downloading...")
-		if err := installFFmpeg("https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip", exeDir, dl); err != nil {
+		if err := installFFmpeg("https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip", exeDir); err != nil {
 			return fmt.Errorf("ffmpeg download error: %s", err.Error())
 		}
 		dl.LogInfo("FFmpeg downloaded successfully!")
