@@ -31,6 +31,10 @@ func (c *Convertor) UpdatePath() error {
 }
 
 func (c *Convertor) Convert(ctx context.Context, dirPath string, extension string) error {
+	if extension == "webm" {
+		return nil
+	}
+
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
 		return fmt.Errorf("directory read error: %w", err)
@@ -44,7 +48,7 @@ func (c *Convertor) Convert(ctx context.Context, dirPath string, extension strin
 		name := file.Name()
 		ext := strings.ToLower(filepath.Ext(name))
 
-		if ext == ".mp4" || ext == ".mp3" || ext == "" {
+		if ext == ".mp4" || ext == ".mov" || ext == ".mp3" || ext == ".aac" || ext == ".wav" || ext == "" {
 			continue
 		}
 
