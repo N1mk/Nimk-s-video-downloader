@@ -1,6 +1,9 @@
 package models
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 var (
 	ErrDeadlineExceeded error  = errors.New("deadline exceeded")
@@ -15,6 +18,7 @@ type ExtensionRequestData struct {
 }
 
 type DownloadJob struct {
+	Ctx       context.Context
 	Link      string
 	Extension string
 	Status    string

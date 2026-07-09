@@ -2,16 +2,28 @@ package deps_downloader
 
 import (
 	"archive/zip"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"nvd/internal/logger"
+	"nvd/internal/models"
 	"os"
 	"path/filepath"
 )
 
-func installYtDlp(installLink string, exeDir string) error {
-	resp, err := http.Get(installLink)
+const (
+	YtDlpDownloadLink  string = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
+	FFmpegDownloadLink string = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+)
+
+func installYtDlp(ctx context.Context, installLink string, exeDir string) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, installLink, nil)
+	if err != nil {
+		return models.ErrDeadlineExceeded
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -33,8 +45,13 @@ func installYtDlp(installLink string, exeDir string) error {
 	return nil
 }
 
-func installFFmpeg(installLink string, exeDir string) error {
-	resp, err := http.Get(installLink)
+func installFFmpeg(ctx context.Context, installLink string, exeDir string) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, installLink, nil)
+	if err != nil {
+		return models.ErrDeadlineExceeded
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -85,7 +102,7 @@ func installFFmpeg(installLink string, exeDir string) error {
 	return fmt.Errorf("yt-dlp file not found")
 }
 
-func DownloadDeps(dl *logger.DownloaderLogger) error {
+func DownloadDeps(ctx context.Context, dl *logger.DownloaderLogger) error {
 	exePath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("exe file location determining error: %s", err.Error())
@@ -95,22 +112,22 @@ func DownloadDeps(dl *logger.DownloaderLogger) error {
 
 	if _, err := os.Stat(filepath.Join(exeDir, "yt-dlp.exe")); os.IsNotExist(err) {
 		dl.LogInfo("Yt-dlp not found. Downloading...")
-		if err := installYtDlp("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe", exeDir); err != nil {
+		if err := installYtDlp(ctx, YtDlpDownloadLink, exeDir); err != nil {
 			return fmt.Errorf("yt-dlp download error: %s", err.Error())
 		}
 		dl.LogInfo("Yt-dlp downloaded successfully!")
 	} else if err != nil {
-		return fmt.Errorf("Yt-dlp exist check error: %s", err.Error())
+		return fmt.Errorf("yt-dlp exist check error: %s", err.Error())
 	}
 
 	if _, err := os.Stat(filepath.Join(exeDir, "ffmpeg.exe")); os.IsNotExist(err) {
 		dl.LogInfo("FFmpeg not found. Downloading...")
-		if err := installFFmpeg("https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip", exeDir); err != nil {
+		if err := installFFmpeg(ctx, FFmpegDownloadLink, exeDir); err != nil {
 			return fmt.Errorf("ffmpeg download error: %s", err.Error())
 		}
 		dl.LogInfo("FFmpeg downloaded successfully!")
 	} else if err != nil {
-		return fmt.Errorf("FFmpeg exist check error: %s", err.Error())
+		return fmt.Errorf("ffmpeg exist check error: %s", err.Error())
 	}
 
 	return nil

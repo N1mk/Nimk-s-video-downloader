@@ -18,7 +18,7 @@ func NewDownloader() *Downloader {
 	return &Downloader{}
 }
 
-func (d *Downloader) UpdatePath(ctx context.Context) error {
+func (d *Downloader) UpdatePath() error {
 	exePath, err := os.Executable()
 	if err != nil {
 		return err

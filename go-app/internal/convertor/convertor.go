@@ -18,7 +18,7 @@ func NewConvertor() *Convertor {
 	return &Convertor{}
 }
 
-func (c *Convertor) UpdatePath(ctx context.Context) error {
+func (c *Convertor) UpdatePath() error {
 	exePath, err := os.Executable()
 	if err != nil {
 		return err

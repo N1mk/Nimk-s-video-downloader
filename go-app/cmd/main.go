@@ -10,7 +10,9 @@ import (
 	"nvd/internal/downloader"
 	"nvd/internal/handler"
 	"nvd/internal/logger"
+	"os/signal"
 	"path/filepath"
+	"time"
 
 	"nvd/internal/service"
 	"os"
@@ -19,31 +21,30 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type RequestData struct {
-	URL string `json:"url"`
-}
-
 func main() {
 	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Printf("work directory change error: %s", err.Error())
+		fmt.Printf("Work directory check error: %s", err.Error())
 	}
 	os.Chdir(filepath.Dir(exePath))
 
 	dl, err := logger.InitDownloaderLogger("app.log")
 	if err != nil {
-		fmt.Printf("logger initialization error: %s", err.Error())
+		fmt.Printf("Logger initialization error: %s", err.Error())
 		os.Exit(1)
 	}
 
-	if err := deps_downloader.DownloadDeps(dl); err != nil {
-		dl.LogError(fmt.Sprintf("dependencies download error: %s", err.Error()))
+	depsDowCtx, closeDepsCtx := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer closeDepsCtx()
+
+	if err := deps_downloader.DownloadDeps(depsDowCtx, dl); err != nil {
+		dl.LogError(fmt.Sprintf("Dependencies download error: %s", err.Error()))
 	}
 	dl.LogInfo("All dependencies are installed!")
 
 	if ok, err := autostarter.AddToAutostart(); !ok {
 		if err != nil {
-			dl.LogError(fmt.Sprintf("add to autostart error: %s", err.Error()))
+			dl.LogError(fmt.Sprintf("Add to autostart error: %s", err.Error()))
 			os.Exit(1)
 		}
 		dl.LogInfo("Program is in autostart")
@@ -53,38 +54,47 @@ func main() {
 
 	dow := downloader.NewDownloader()
 
-	if err := dow.UpdatePath(context.TODO()); err != nil {
-		dl.LogError(fmt.Sprintf("downloader path update error: %s", err.Error()))
+	if err := dow.UpdatePath(); err != nil {
+		dl.LogError(fmt.Sprintf("Downloader path update error: %s", err.Error()))
 		os.Exit(1)
 	}
 
-	if err := dow.Update(context.TODO()); err != nil {
-		dl.LogError(fmt.Sprintf("downloader update error: %s", err.Error()))
+	dowUpdCtx, closeDowCtx := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer closeDowCtx()
+
+	if err := dow.Update(dowUpdCtx); err != nil {
+		dl.LogError(fmt.Sprintf("Downloader update error: %s", err.Error()))
 		os.Exit(1)
 	}
 
 	con := convertor.NewConvertor()
-	if err := con.UpdatePath(context.Background()); err != nil {
-		dl.LogError(fmt.Sprintf("convertor path update error: %s", err.Error()))
+	if err := con.UpdatePath(); err != nil {
+		dl.LogError(fmt.Sprintf("Convertor path update error: %s", err.Error()))
 		os.Exit(1)
 	}
 
 	if err := godotenv.Load("./config.env"); err != nil {
-		dl.LogError(fmt.Sprintf("env file reed error: %s", err.Error()))
+		dl.LogError(fmt.Sprintf("Env file reed error: %s", err.Error()))
 		os.Exit(1)
 	}
 
 	downloadPath := os.Getenv("DOWNLOAD_PATH")
 
-	svc := service.NewDownloadService(downloadPath, dl, dow, con)
+	ctx, close := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	defer close()
+
+	svc := service.NewDownloadService(ctx, downloadPath, dl, dow, con)
 
 	svc.CreateWorkers(5)
 
-	h := handler.NewExtensionHandler(context.TODO(), svc, dl)
+	h := handler.NewExtensionHandler(ctx, svc, dl)
 
 	r := chi.NewRouter()
 
 	r.Post("/", h.Post)
 
-	http.ListenAndServe("localhost:8080", r)
+	go http.ListenAndServe("localhost:8080", r)
+
+	<-ctx.Done()
+	svc.Wg.Wait()
 }
