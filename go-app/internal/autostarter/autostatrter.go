@@ -6,7 +6,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-func AddToAutostart() (bool, error) {
+func AddToAutostart() (ok bool, err error) {
 	exePath, err := os.Executable()
 	if err != nil {
 		return false, err

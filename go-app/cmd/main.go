@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
+
+	//"net/http"
 	"nvd/internal/autostarter"
 	"nvd/internal/convertor"
 	"nvd/internal/deps_downloader"
@@ -17,7 +18,7 @@ import (
 	"nvd/internal/service"
 	"os"
 
-	"github.com/go-chi/chi/v5"
+	//"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 )
 
@@ -44,10 +45,10 @@ func main() {
 
 	if ok, err := autostarter.AddToAutostart(); !ok {
 		if err != nil {
-			dl.LogError(fmt.Sprintf("Add to autostart error: %s", err.Error()))
+			dl.LogFatal(fmt.Sprintf("Add to autostart error: %s", err.Error()))
 			os.Exit(1)
 		}
-		dl.LogInfo("Program is in autostart")
+		dl.LogInfo("Program was in autostart")
 	} else {
 		dl.LogInfo("Program added to autostart")
 	}
@@ -55,7 +56,7 @@ func main() {
 	dow := downloader.NewDownloader()
 
 	if err := dow.UpdatePath(); err != nil {
-		dl.LogError(fmt.Sprintf("Downloader path update error: %s", err.Error()))
+		dl.LogFatal(fmt.Sprintf("Downloader path update error: %s", err.Error()))
 		os.Exit(1)
 	}
 
@@ -63,18 +64,18 @@ func main() {
 	defer closeDowCtx()
 
 	if err := dow.Update(dowUpdCtx); err != nil {
-		dl.LogError(fmt.Sprintf("Downloader update error: %s", err.Error()))
+		dl.LogFatal(fmt.Sprintf("Downloader update error: %s", err.Error()))
 		os.Exit(1)
 	}
 
 	con := convertor.NewConvertor()
 	if err := con.UpdatePath(); err != nil {
-		dl.LogError(fmt.Sprintf("Convertor path update error: %s", err.Error()))
+		dl.LogFatal(fmt.Sprintf("Convertor path update error: %s", err.Error()))
 		os.Exit(1)
 	}
 
 	if err := godotenv.Load("./config.env"); err != nil {
-		dl.LogError(fmt.Sprintf("Env file reed error: %s", err.Error()))
+		dl.LogFatal(fmt.Sprintf("Env file reed error: %s", err.Error()))
 		os.Exit(1)
 	}
 
@@ -89,12 +90,22 @@ func main() {
 
 	h := handler.NewExtensionHandler(ctx, svc, dl)
 
-	r := chi.NewRouter()
+	if ok, err := h.InstallNativeHost(); !ok {
+		if err != nil {
+			dl.LogError(fmt.Sprintf("Native host installation error: %s", err.Error()))
+		}
+		dl.LogInfo("Native host was created")
+	} else {
+		dl.LogInfo("Native host created")
+	}
 
-	r.Post("/", h.Post)
+	if err := h.Start(); err != nil {
+		dl.LogFatal(fmt.Sprintf("Handler error: %s", err.Error()))
+		if ctx.Err() == nil {
+			close()
+		}
+	}
 
-	go http.ListenAndServe("localhost:8080", r)
-
-	<-ctx.Done()
+	//<-ctx.Done()
 	svc.Wg.Wait()
 }

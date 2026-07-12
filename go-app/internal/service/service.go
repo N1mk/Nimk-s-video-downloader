@@ -14,16 +14,17 @@ import (
 type DownloadService struct {
 	ctx          context.Context
 	downloadPath string
-	in           chan models.DownloadJob
+	in           chan *models.DownloadJob
 	Wg           sync.WaitGroup
 	workersCount int
+	jobs         []*models.DownloadJob
 	dl           *logger.DownloaderLogger
 	dow          *downloader.Downloader
 	con          *convertor.Convertor
 }
 
 func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, dow *downloader.Downloader, con *convertor.Convertor) *DownloadService {
-	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan models.DownloadJob), dl: dl, dow: dow, con: con}
+	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *models.DownloadJob), jobs: make([]*models.DownloadJob, 0), dl: dl, dow: dow, con: con}
 }
 
 func (s *DownloadService) CreateWorkers(amount int) {
@@ -35,12 +36,24 @@ func (s *DownloadService) CreateWorkers(amount int) {
 }
 
 func (s *DownloadService) Download(ctx context.Context, link string, extension string) {
-	job := models.DownloadJob{Ctx: ctx, Link: link, Extension: extension, Status: models.JobStatusInProcess}
+	job := &models.DownloadJob{Ctx: ctx, Link: link, Extension: extension, Status: models.JobStatusInProcess}
+
+	s.jobs = append(s.jobs, job)
 
 	s.in <- job
 }
 
-func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan models.DownloadJob, id int) {
+func (s *DownloadService) GetJobByLink(link string) (job *models.DownloadJob, err error) {
+	for _, job := range s.jobs {
+		if job.Link == link {
+			return job, nil
+		}
+	}
+
+	return nil, models.ErrNotFound
+}
+
+func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *models.DownloadJob, id int) {
 	for {
 		select {
 		case <-ctx.Done():
