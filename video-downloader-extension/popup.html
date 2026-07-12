@@ -8,11 +8,62 @@
       width: 250px;
       padding: 12px;
       margin: 0;
+      position: relative;
+    }
+    .settings-toggle {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0;
+      width: auto;
+      color: #555;
+    }
+    .settings-toggle:hover {
+      background: none;
+      color: #000;
     }
     h3 {
       margin-top: 0;
+      margin-bottom: 15px;
       color: #333;
       font-size: 14px;
+      text-align: center;
+    }
+    #settingsMenu {
+      display: none;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    .settings-title {
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 12px;
+      box-sizing: border-box;
+      margin-bottom: 8px;
+    }
+    .btn-save {
+      background-color: #4CAF50;
+      padding: 6px;
+      font-size: 12px;
+    }
+    .btn-save:hover {
+      background-color: #45a049;
     }
     .field-group {
       margin-bottom: 12px;
@@ -31,7 +82,7 @@
       font-size: 13px;
       box-sizing: border-box;
     }
-    button {
+    #sendBtn {
       width: 100%;
       padding: 10px;
       background-color: #ff0000;
@@ -41,7 +92,7 @@
       font-weight: bold;
       cursor: pointer;
     }
-    button:hover {
+    #sendBtn:hover {
       background-color: #cc0000;
     }
     #status {
@@ -53,21 +104,32 @@
   </style>
 </head>
 <body>
+  <button id="toggleSettingsBtn" class="settings-toggle" title="Настройки">⚙️</button>
+
   <h3>Загрузка трека / видео</h3>
   
-  <div class="field-group">
-    <label for="formatSelect">Выберите формат:</label>
-    <select id="formatSelect">
-      <option value="mp4">MP4 (Видео)</option>
-      <option value="webm">WebM (Видео)</option>
-      <option value="mov">MOV (Видео)</option>
-      <option value="mp3">MP3 (Аудио)</option>
-      <option value="aac">AAC (Аудио)</option>
-      <option value="wav">WAV (Аудио)</option>
-    </select>
+  <div id="settingsMenu">
+    <div class="settings-title">Настройки конфигурации</div>
+    <input type="text" id="downloadPathInput" placeholder="Путь для загрузки...">
+    <button id="saveConfigBtn" class="btn-save">Сохранить</button>
   </div>
 
-  <button id="sendBtn">Скачать</button>
+  <div id="mainForm">
+    <div class="field-group">
+      <label for="formatSelect">Выберите формат:</label>
+      <select id="formatSelect">
+        <option value="mp4">MP4 (Видео)</option>
+        <option value="webm">WebM (Видео)</option>
+        <option value="mov">MOV (Видео)</option>
+        <option value="mp3">MP3 (Аудио)</option>
+        <option value="aac">AAC (Аудио)</option>
+        <option value="wav">WAV (Аудио)</option>
+      </select>
+    </div>
+
+    <button id="sendBtn">Скачать</button>
+  </div>
+
   <div id="status">Ожидание действия...</div>
   
   <script src="popup.js"></script>

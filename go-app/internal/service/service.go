@@ -40,6 +40,10 @@ func (s *DownloadService) Download(ctx context.Context, link string, extension s
 	s.in <- job
 }
 
+func (s *DownloadService) ChangeDownloadPath(path string) {
+	s.downloadPath = path
+}
+
 func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan models.DownloadJob, id int) {
 	for {
 		select {

@@ -1,3 +1,65 @@
+async function loadConfig() {
+  const statusDiv = document.getElementById('status');
+  const pathInput = document.getElementById('downloadPathInput');
+  
+  try {
+    const response = await fetch('http://localhost:8080/config', {
+      method: 'GET'
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.download_path !== undefined) {
+        pathInput.value = data.download_path;
+      }
+    } else {
+      console.error('Не удалось загрузить конфиг:', response.status);
+    }
+  } catch (error) {
+    statusDiv.innerText = 'Предупреждение: Не удалось подключиться к localhost:8080 для загрузки настроек';
+    console.error(error);
+  }
+}
+
+loadConfig();
+
+document.getElementById('toggleSettingsBtn').addEventListener('click', () => {
+  const settingsMenu = document.getElementById('settingsMenu');
+  if (settingsMenu.style.display === 'block') {
+    settingsMenu.style.display = 'none';
+  } else {
+    settingsMenu.style.display = 'block';
+  }
+});
+
+document.getElementById('saveConfigBtn').addEventListener('click', async () => {
+  const statusDiv = document.getElementById('status');
+  const pathInput = document.getElementById('downloadPathInput');
+  
+  statusDiv.innerText = 'Сохранение конфигурации...';
+  
+  try {
+    const response = await fetch('http://localhost:8080/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        download_path: pathInput.value
+      })
+    });
+    
+    if (response.ok) {
+      statusDiv.innerText = 'Конфигурация успешно сохранена!';
+      document.getElementById('settingsMenu').style.style.display = 'none';
+    } else {
+      statusDiv.innerText = `Ошибка сохранения: ${response.status} ${response.statusText}`;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 document.getElementById('sendBtn').addEventListener('click', async () => {
   const statusDiv = document.getElementById('status');
   const formatSelect = document.getElementById('formatSelect');
@@ -38,7 +100,7 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
   statusDiv.innerText = 'Отправка запроса на загрузку...';
 
   try {
-    const response = await fetch('http://localhost:8080', {
+    const response = await fetch('http://localhost:8080/download', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

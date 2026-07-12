@@ -6,6 +6,7 @@ import (
 
 	"net/http"
 	"nvd/internal/autostarter"
+	"nvd/internal/config_reader"
 	"nvd/internal/convertor"
 	"nvd/internal/deps_downloader"
 	"nvd/internal/downloader"
@@ -19,7 +20,6 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -74,25 +74,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := godotenv.Load("./config.env"); err != nil {
-		dl.LogFatal(fmt.Sprintf("Env file reed error: %s", err.Error()))
+	cr := config_reader.NewConfigReader(exePath)
+	config, err := cr.GetConfig()
+	if err != nil {
+		dl.LogFatal(fmt.Sprintf("Config reader error: %s", err.Error()))
 		os.Exit(1)
 	}
-
-	downloadPath := os.Getenv("DOWNLOAD_PATH")
 
 	ctx, close := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer close()
 
-	svc := service.NewDownloadService(ctx, downloadPath, dl, dow, con)
+	svc := service.NewDownloadService(ctx, config.DownloadPath, dl, dow, con)
 
 	svc.CreateWorkers(5)
 
-	h := handler.NewExtensionHandler(ctx, svc, dl)
+	h := handler.NewExtensionHandler(ctx, svc, dl, cr)
 
 	r := chi.NewRouter()
 
-	r.Post("/", h.Post)
+	r.Post("/download", h.PostDownload)
+	r.Get("/config", h.GetConfig)
+	r.Post("/config", h.PostConfig)
 
 	http.ListenAndServe("localhost:8080", r)
 

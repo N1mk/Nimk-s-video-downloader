@@ -24,3 +24,7 @@ type DownloadJob struct {
 	Status    string
 	Error     error
 }
+
+type Config struct {
+	DownloadPath string `json:"download_path"`
+}
