@@ -55,6 +55,8 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan models
 			link := job.Link
 			extension := job.Extension
 
+			s.dl.LogInfo(fmt.Sprintf("Started downloading video(%s) to %s", link, s.downloadPath))
+
 			if _, err := os.Stat(s.downloadPath); os.IsNotExist(err) {
 				err = os.MkdirAll(s.downloadPath, 0755)
 				if err != nil {
@@ -81,6 +83,8 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan models
 			}
 
 			job.Status = models.JobStatusComplete
+
+			s.dl.LogInfo(fmt.Sprintf("Video(%s) succesfully downloaded to %s", link, s.downloadPath))
 		}
 	}
 }

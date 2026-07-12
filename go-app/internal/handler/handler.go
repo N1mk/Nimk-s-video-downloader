@@ -72,3 +72,12 @@ func (h *ExtensionHandler) PostConfig(w http.ResponseWriter, r *http.Request) {
 
 	h.svc.ChangeDownloadPath(config.DownloadPath)
 }
+
+func (h *ExtensionHandler) PostLogs(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	if err := h.dl.OpenLogFile(); err != nil {
+		h.dl.LogError(fmt.Sprintf("Logger error: %s", err.Error()))
+		http.Error(w, "Cannot open log file", http.StatusInternalServerError)
+	}
+}

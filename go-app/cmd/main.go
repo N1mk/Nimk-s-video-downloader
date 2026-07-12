@@ -95,6 +95,7 @@ func main() {
 	r.Post("/download", h.PostDownload)
 	r.Get("/config", h.GetConfig)
 	r.Post("/config", h.PostConfig)
+	r.Post("/logs", h.PostLogs)
 
 	http.ListenAndServe("localhost:8080", r)
 

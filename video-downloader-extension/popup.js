@@ -51,11 +51,31 @@ document.getElementById('saveConfigBtn').addEventListener('click', async () => {
     
     if (response.ok) {
       statusDiv.innerText = 'Конфигурация успешно сохранена!';
-      document.getElementById('settingsMenu').style.style.display = 'none';
+      document.getElementById('settingsMenu').style.display = 'none'; 
     } else {
       statusDiv.innerText = `Ошибка сохранения: ${response.status} ${response.statusText}`;
     }
   } catch (error) {
+    console.error(error);
+  }
+});
+
+document.getElementById('openLogsBtn').addEventListener('click', async () => {
+  const statusDiv = document.getElementById('status');
+  statusDiv.innerText = 'Запрос на открытие логов...';
+  
+  try {
+    const response = await fetch('http://localhost:8080/logs', {
+      method: 'POST'
+    });
+    
+    if (response.ok) {
+      statusDiv.innerText = 'Запрос на логи успешно отправлен!';
+    } else {
+      statusDiv.innerText = `Ошибка логов: ${response.status} ${response.statusText}`;
+    }
+  } catch (error) {
+    statusDiv.innerText = 'Ошибка подключения к серверу логов';
     console.error(error);
   }
 });
