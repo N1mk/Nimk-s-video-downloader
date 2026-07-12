@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 )
@@ -31,4 +32,8 @@ func (l *DownloaderLogger) LogInfo(s string) {
 
 func (l *DownloaderLogger) LogError(s string) {
 	l.logger.Error(s)
+}
+
+func (l *DownloaderLogger) LogFatal(s string) {
+	l.logger.Error(fmt.Sprintf("FATAL: %s", s))
 }

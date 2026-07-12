@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"net/http"
 	"nvd/internal/autostarter"
 	"nvd/internal/convertor"
@@ -44,10 +45,10 @@ func main() {
 
 	if ok, err := autostarter.AddToAutostart(); !ok {
 		if err != nil {
-			dl.LogError(fmt.Sprintf("Add to autostart error: %s", err.Error()))
+			dl.LogFatal(fmt.Sprintf("Add to autostart error: %s", err.Error()))
 			os.Exit(1)
 		}
-		dl.LogInfo("Program is in autostart")
+		dl.LogInfo("Program was in autostart")
 	} else {
 		dl.LogInfo("Program added to autostart")
 	}
@@ -55,7 +56,7 @@ func main() {
 	dow := downloader.NewDownloader()
 
 	if err := dow.UpdatePath(); err != nil {
-		dl.LogError(fmt.Sprintf("Downloader path update error: %s", err.Error()))
+		dl.LogFatal(fmt.Sprintf("Downloader path update error: %s", err.Error()))
 		os.Exit(1)
 	}
 
@@ -63,18 +64,18 @@ func main() {
 	defer closeDowCtx()
 
 	if err := dow.Update(dowUpdCtx); err != nil {
-		dl.LogError(fmt.Sprintf("Downloader update error: %s", err.Error()))
+		dl.LogFatal(fmt.Sprintf("Downloader update error: %s", err.Error()))
 		os.Exit(1)
 	}
 
 	con := convertor.NewConvertor()
 	if err := con.UpdatePath(); err != nil {
-		dl.LogError(fmt.Sprintf("Convertor path update error: %s", err.Error()))
+		dl.LogFatal(fmt.Sprintf("Convertor path update error: %s", err.Error()))
 		os.Exit(1)
 	}
 
 	if err := godotenv.Load("./config.env"); err != nil {
-		dl.LogError(fmt.Sprintf("Env file reed error: %s", err.Error()))
+		dl.LogFatal(fmt.Sprintf("Env file reed error: %s", err.Error()))
 		os.Exit(1)
 	}
 
@@ -93,7 +94,7 @@ func main() {
 
 	r.Post("/", h.Post)
 
-	go http.ListenAndServe("localhost:8080", r)
+	http.ListenAndServe("localhost:8080", r)
 
 	<-ctx.Done()
 	svc.Wg.Wait()
