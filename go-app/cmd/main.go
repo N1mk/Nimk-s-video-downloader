@@ -93,6 +93,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Post("/download", h.PostDownload)
+	r.Post("/status", h.PostJobStatusRequest)
 	r.Get("/config", h.GetConfig)
 	r.Post("/config", h.PostConfig)
 	r.Post("/logs", h.PostLogs)

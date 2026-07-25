@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -33,7 +34,32 @@ func (h *ExtensionHandler) PostDownload(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.svc.Download(h.ctx, data.URL, data.Extension)
+	h.svc.Download(h.ctx, data.ID, data.URL, data.Extension)
+}
+
+func (h *ExtensionHandler) PostJobStatusRequest(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	var data models.ExtensionRequestData
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		h.dl.LogError("Bad input")
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	job, err := h.svc.GetJobByID(data.ID)
+	if errors.Is(err, models.ErrNotFound) {
+		h.dl.LogError("Job not found")
+		http.Error(w, "Job not found", http.StatusNotFound)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(job); err != err {
+		h.dl.LogError(fmt.Sprintf("Job marshaling error: %s", err.Error()))
+		http.Error(w, fmt.Sprintf("Job marshaling error: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *ExtensionHandler) GetConfig(w http.ResponseWriter, r *http.Request) {

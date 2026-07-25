@@ -14,16 +14,17 @@ import (
 type DownloadService struct {
 	ctx          context.Context
 	downloadPath string
-	in           chan models.DownloadJob
+	in           chan *models.DownloadJob
 	Wg           sync.WaitGroup
 	workersCount int
+	jobs         []*models.DownloadJob
 	dl           *logger.DownloaderLogger
 	dow          *downloader.Downloader
 	con          *convertor.Convertor
 }
 
 func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, dow *downloader.Downloader, con *convertor.Convertor) *DownloadService {
-	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan models.DownloadJob), dl: dl, dow: dow, con: con}
+	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *models.DownloadJob), jobs: make([]*models.DownloadJob, 0), dl: dl, dow: dow, con: con}
 }
 
 func (s *DownloadService) CreateWorkers(amount int) {
@@ -34,17 +35,29 @@ func (s *DownloadService) CreateWorkers(amount int) {
 	}
 }
 
-func (s *DownloadService) Download(ctx context.Context, link string, extension string) {
-	job := models.DownloadJob{Ctx: ctx, Link: link, Extension: extension, Status: models.JobStatusInProcess}
+func (s *DownloadService) Download(ctx context.Context, id int, link string, extension string) {
+	job := &models.DownloadJob{ID: id, Ctx: ctx, Link: link, Extension: extension, Status: models.JobStatusInProcess}
+
+	s.jobs = append(s.jobs, job)
 
 	s.in <- job
+}
+
+func (s *DownloadService) GetJobByID(id int) (job *models.DownloadJob, err error) {
+	for _, job := range s.jobs {
+		if job.ID == id {
+			return job, nil
+		}
+	}
+
+	return nil, models.ErrNotFound
 }
 
 func (s *DownloadService) ChangeDownloadPath(path string) {
 	s.downloadPath = path
 }
 
-func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan models.DownloadJob, id int) {
+func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *models.DownloadJob, id int) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -63,23 +76,27 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan models
 					s.dl.LogError(fmt.Sprintf("worker %d error: folder creation error: %s", id, err.Error()))
 					job.Status = models.JobStatusError
 					job.Error = fmt.Errorf("folder creation error: %w", err)
+					return
 				}
 			} else if err != nil {
 				s.dl.LogError(fmt.Sprintf("worker %d error: folder exist check error: %s", id, err.Error()))
 				job.Status = models.JobStatusError
 				job.Error = fmt.Errorf("folder exist check error: %w", err)
+				return
 			}
 
 			if err := s.dow.Download(jobCtx, link, s.downloadPath); err != nil {
 				s.dl.LogError(fmt.Sprintf("worker %d error: downloader error: %s", id, err.Error()))
 				job.Status = models.JobStatusError
 				job.Error = err
+				return
 			}
 
 			if err := s.con.Convert(jobCtx, s.downloadPath, extension); err != nil {
 				s.dl.LogError(fmt.Sprintf("worker %d error: convertor error: %s", id, err.Error()))
 				job.Status = models.JobStatusError
 				job.Error = err
+				return
 			}
 
 			job.Status = models.JobStatusComplete

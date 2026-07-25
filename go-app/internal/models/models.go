@@ -7,22 +7,25 @@ import (
 
 var (
 	ErrDeadlineExceeded error  = errors.New("deadline exceeded")
+	ErrNotFound         error  = errors.New("not found")
 	JobStatusInProcess  string = "in process"
 	JobStatusError      string = "error"
 	JobStatusComplete   string = "complete"
 )
 
 type ExtensionRequestData struct {
+	ID        int    `json:"id"`
 	URL       string `json:"url"`
 	Extension string `json:"extension"`
 }
 
 type DownloadJob struct {
-	Ctx       context.Context
-	Link      string
-	Extension string
-	Status    string
-	Error     error
+	ID        int             `json:"id"`
+	Ctx       context.Context `json:"ctx"`
+	Link      string          `json:"link"`
+	Extension string          `json:"extension"`
+	Status    string          `json:"status"`
+	Error     error           `json:"error"`
 }
 
 type Config struct {

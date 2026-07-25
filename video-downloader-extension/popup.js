@@ -13,7 +13,7 @@ async function loadConfig() {
         pathInput.value = data.download_path;
       }
     } else {
-      console.error('Не удалось загрузить конфиг:', response.status);
+      console.error('Не удалось открыть конфиг:', response.status);
     }
   } catch (error) {
     statusDiv.innerText = 'Предупреждение: Не удалось подключиться к localhost:8080 для загрузки настроек';
@@ -62,7 +62,7 @@ document.getElementById('saveConfigBtn').addEventListener('click', async () => {
 
 document.getElementById('openLogsBtn').addEventListener('click', async () => {
   const statusDiv = document.getElementById('status');
-  statusDiv.innerText = 'Запрос на открытие логов...';
+  statusDiv.innerText = 'Открытие файла логов...';
   
   try {
     const response = await fetch('http://localhost:8080/logs', {
@@ -70,15 +70,17 @@ document.getElementById('openLogsBtn').addEventListener('click', async () => {
     });
     
     if (response.ok) {
-      statusDiv.innerText = 'Запрос на логи успешно отправлен!';
+      statusDiv.innerText = 'Файл логов открыт!';
     } else {
-      statusDiv.innerText = `Ошибка логов: ${response.status} ${response.statusText}`;
+      statusDiv.innerText = `Ошибка открытия файла логов: ${response.status} ${response.statusText}`;
     }
   } catch (error) {
     statusDiv.innerText = 'Ошибка подключения к серверу логов';
     console.error(error);
   }
 });
+
+let statusIntervalId = null;
 
 document.getElementById('sendBtn').addEventListener('click', async () => {
   const statusDiv = document.getElementById('status');
@@ -113,11 +115,13 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
   }
 
   if (!cleanUrl) {
-    statusDiv.innerText = `Вы не на странице плеера.\nТекущий хост: ${host}\nПуть: ${path}`;
+    statusDiv.innerText = `Вы не на странице плеера`;
     return;
   }
 
-  statusDiv.innerText = 'Отправка запроса на загрузку...';
+  statusDiv.innerText = 'Начало загрузки...';
+
+  const randomId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
 
   try {
     const response = await fetch('http://localhost:8080/download', {
@@ -127,12 +131,15 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
       },
       body: JSON.stringify({ 
         url: cleanUrl,
-        extension: selectedExtension 
+        extension: selectedExtension,
+        id: randomId
       })
     });
 
     if (response.ok) {
-      statusDiv.innerText = `Загрузка начата [${selectedExtension.toUpperCase()}]!\n${cleanUrl}`;
+      statusDiv.innerText = `Загрузка начата!`;
+      
+      startStatusPolling(randomId);
     } else {
       statusDiv.innerText = `Ошибка: ${response.status} ${response.statusText}`;
     }
@@ -141,3 +148,54 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
     console.error(error);
   }
 });
+
+function startStatusPolling(id) {
+  const statusDiv = document.getElementById('status');
+  
+  if (statusIntervalId) {
+    clearInterval(statusIntervalId);
+  }
+
+  const startTime = Date.now();
+  const maxDuration = 5 * 60 * 1000;
+
+  statusIntervalId = setInterval(async () => {
+    if (Date.now() - startTime > maxDuration) {
+      clearInterval(statusIntervalId);
+      statusDiv.innerText = 'Загрузка заняла слишком много времени\nПроверьте папку загрузок';
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8080/status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url: "",
+          extension: "",
+          id: id
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.status === 'in process') {
+          statusDiv.innerText = `Видео скачивается... (ID: ${id})`;
+        } else if (data.status === 'error') {
+          statusDiv.innerText = `Ошибка: ${data.error || 'Неизвестная ошибка при загрузке'}`;
+          clearInterval(statusIntervalId); 
+        } else if (data.status === 'complete') {
+          statusDiv.innerText = 'Видео скачалось!';
+          clearInterval(statusIntervalId); 
+        }
+      } else {
+        console.error('Ошибка проверки статуса загрузки:', response.status);
+      }
+    } catch (error) {
+      console.error('Ошибка сети при проверки статуса загрузки:', error);
+    }
+  }, 10000);
+}
