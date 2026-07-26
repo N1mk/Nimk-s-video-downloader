@@ -102,7 +102,8 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
   const host = urlObj.hostname;
   const path = urlObj.pathname;
 
-  if (host.includes('youtube.com') && path === '/watch') {
+  // --- YouTube & YouTube Music ---
+  if ((host.includes('youtube.com') || host.includes('music.youtube.com')) && path === '/watch') {
     const videoId = urlObj.searchParams.get('v');
     if (videoId) {
       cleanUrl = `https://youtube.com/watch?v=${videoId}`;
@@ -112,10 +113,38 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
     if (videoId) {
       cleanUrl = `https://youtube.com/watch?v=${videoId}`;
     }
+
+  // --- Yandex Music (WIP) ---
+  //} else if (host.includes('music.yandex.')) {
+  //  const trackRegex = /\/album\/\d+\/track\/(\d+)/;
+  //  const match = path.match(trackRegex);
+  //  if (match) {
+  //    cleanUrl = `https://music.yandex.ru/track/${match[1]}`;
+  //  }
+
+  // --- SoundCloud ---
+  } else if (host.includes('soundcloud.com')) {
+    const isPlaylist = path.includes('/sets') || path.includes('/albums') || path.includes('/playlists');
+    const systemPaths = ['/discover', '/stream', '/charts', '/search', '/upload', '/messages', '/notifications', '/you'];
+    const isSystem = systemPaths.some(p => path.startsWith(p));
+    
+    const pathSegments = path.split('/').filter(Boolean);
+    
+    if (!isPlaylist && !isSystem && pathSegments.length === 2) {
+      cleanUrl = `https://soundcloud.com/${pathSegments[0]}/${pathSegments[1]}`;
+    }
+
+  // --- Rutube ---
+  } else if (host.includes('rutube.ru')) {
+    const rutubeRegex = /^\/video\/([a-zA-Z0-9]+)/;
+    const match = path.match(rutubeRegex);
+    if (match) {
+      cleanUrl = `https://rutube.ru/${match[1]}/`;
+    }
   }
 
   if (!cleanUrl) {
-    statusDiv.innerText = `Вы не на странице плеера`;
+    statusDiv.innerText = `Вы не на странице видео/трека`;
     return;
   }
 
@@ -138,7 +167,6 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
 
     if (response.ok) {
       statusDiv.innerText = `Загрузка начата!`;
-      
       startStatusPolling(randomId);
     } else {
       statusDiv.innerText = `Ошибка: ${response.status} ${response.statusText}`;
@@ -188,7 +216,7 @@ function startStatusPolling(id) {
           statusDiv.innerText = `Ошибка: ${data.error || 'Неизвестная ошибка при загрузке'}`;
           clearInterval(statusIntervalId); 
         } else if (data.status === 'complete') {
-          statusDiv.innerText = 'Видео скачалось!';
+          statusDiv.innerText = 'Загрузка завершена!';
           clearInterval(statusIntervalId); 
         }
       } else {
