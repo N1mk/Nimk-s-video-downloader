@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"syscall"
 	"time"
 )
@@ -13,6 +14,7 @@ import (
 type DownloaderLogger struct {
 	logger   *slog.Logger
 	filePath string
+	file     *os.File
 }
 
 func InitDownloaderLogger(filePath string) (*DownloaderLogger, error) {
@@ -24,7 +26,7 @@ func InitDownloaderLogger(filePath string) (*DownloaderLogger, error) {
 
 	logger := slog.New(slog.NewTextHandler(file, nil))
 
-	dl := DownloaderLogger{logger: logger, filePath: filePath}
+	dl := DownloaderLogger{logger: logger, filePath: filePath, file: file}
 
 	dl.LogInfo("App started!")
 
@@ -52,6 +54,77 @@ func (l *DownloaderLogger) OpenLogFile() error {
 	}
 
 	time.Sleep(5 * time.Second)
+
+	return nil
+}
+
+func (l *DownloaderLogger) Shutdown() error {
+	exePath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("exe path retrieving error: %w", err)
+	}
+
+	exeDir := filepath.Dir(exePath)
+
+	oldLogsPath := filepath.Join(exeDir, "old-logs")
+	logFilePath := filepath.Join(exeDir, "app.log")
+
+	if err := os.MkdirAll(oldLogsPath, 0755); err != nil {
+		return fmt.Errorf("old logs directory creation error: %w", err)
+	}
+
+	files, err := os.ReadDir(oldLogsPath)
+	if err != nil {
+		return fmt.Errorf("old logs directory read error: %w", err)
+	}
+
+	type fileInfo struct {
+		entry   os.DirEntry
+		modTime time.Time
+	}
+	var filteredFiles []fileInfo
+
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+		info, err := f.Info()
+		if err != nil {
+			return fmt.Errorf("old log file reading error: %w", err)
+		}
+		filteredFiles = append(filteredFiles, fileInfo{entry: f, modTime: info.ModTime()})
+	}
+
+	if len(filteredFiles) <= 2 {
+		return nil
+	}
+
+	sort.Slice(filteredFiles, func(i, j int) bool {
+		return filteredFiles[i].modTime.Before(filteredFiles[j].modTime)
+	})
+
+	toRemoveCount := len(filteredFiles) - 2
+
+	for i := 0; i < toRemoveCount; i++ {
+		fileToDelete := filteredFiles[i].entry
+		fullPath := filepath.Join(oldLogsPath, fileToDelete.Name())
+
+		err := os.Remove(fullPath)
+		if err != nil {
+			return fmt.Errorf("old log file removing error: %w", err)
+		}
+	}
+
+	l.file.Close()
+	if err := os.Rename(logFilePath, fmt.Sprintf("%s/app %v.log", oldLogsPath, time.Now().Format("2006-01-02_15-04-05"))); err != nil {
+		return fmt.Errorf("log file moving error: %w", err)
+	}
+
+	file, err := os.Create(logFilePath)
+	if err != nil {
+		return fmt.Errorf("log file creation error: %w", err)
+	}
+	file.Close()
 
 	return nil
 }

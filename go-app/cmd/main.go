@@ -98,8 +98,14 @@ func main() {
 	r.Post("/config", h.PostConfig)
 	r.Post("/logs", h.PostLogs)
 
-	http.ListenAndServe("localhost:8080", r)
+	go http.ListenAndServe("localhost:8080", r)
 
 	<-ctx.Done()
+
+	dl.LogInfo("Shutdowning")
+	if err := dl.Shutdown(); err != nil {
+		dl.LogError(fmt.Sprintf("Logger shutdowning error: %s", err.Error()))
+	}
+
 	svc.Wg.Wait()
 }
