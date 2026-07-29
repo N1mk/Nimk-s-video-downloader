@@ -7,4 +7,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 )
 
-require golang.org/x/sys v0.46.0 // indirect
+require (
+	github.com/emersion/go-autostart v0.0.0-20250403115856-34830d6457d2 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+)
