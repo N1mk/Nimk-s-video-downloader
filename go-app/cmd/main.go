@@ -43,7 +43,7 @@ func main() {
 	}
 	dl.LogInfo("All dependencies are installed!")
 
-	if ok, err := autostarter.AddToAutostart(); !ok {
+	if ok, err := autostarter.AddToAutostart(dl); !ok {
 		if err != nil {
 			dl.LogFatal(fmt.Sprintf("Add to autostart error: %s", err.Error()))
 			os.Exit(1)
