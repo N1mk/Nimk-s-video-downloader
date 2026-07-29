@@ -13,7 +13,6 @@ import (
 
 const linuxServiceName string = "nvd"
 
-// Зависит от ОС
 func AddToAutostart(dl *logger.DownloaderLogger) (ok bool, err error) {
 	exePath, err := os.Executable()
 	if err != nil {

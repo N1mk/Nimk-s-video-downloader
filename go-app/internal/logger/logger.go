@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"syscall"
 	"time"
@@ -38,15 +39,23 @@ func (l *DownloaderLogger) OpenLogFile() error {
 	if err != nil {
 		return err
 	}
-
 	exeDir := filepath.Dir(exePath)
-
 	fullFilePath := filepath.Join(exeDir, l.filePath)
 
-	cmd := exec.Command("notepad.exe", fullFilePath)
+	var cmd *exec.Cmd
 
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		CreationFlags: 0x00000010,
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("notepad.exe", fullFilePath)
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			CreationFlags: 0x00000010,
+		}
+	case "darwin": // macOS
+		cmd = exec.Command("open", fullFilePath)
+	case "linux":
+		cmd = exec.Command("xdg-open", fullFilePath)
+	default:
+		return fmt.Errorf("unknown OS: %s", runtime.GOOS)
 	}
 
 	if err := cmd.Start(); err != nil {
@@ -54,7 +63,6 @@ func (l *DownloaderLogger) OpenLogFile() error {
 	}
 
 	time.Sleep(5 * time.Second)
-
 	return nil
 }
 
