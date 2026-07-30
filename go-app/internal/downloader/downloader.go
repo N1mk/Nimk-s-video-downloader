@@ -7,8 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
-	"syscall"
 )
 
 type Downloader struct {
@@ -34,9 +32,7 @@ func (d *Downloader) UpdatePath() error {
 func (d *Downloader) Update(ctx context.Context) error {
 	cmd := exec.CommandContext(ctx, d.ytdlpPath, "-U")
 
-	if runtime.GOOS == "windows" {
-		cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000}
-	}
+	setPlatformSysProcAttr(cmd)
 
 	err := cmd.Run()
 	if ctx.Err() == context.DeadlineExceeded {
@@ -52,9 +48,7 @@ func (d *Downloader) Download(ctx context.Context, link string, downloadPath str
 	cmd := exec.CommandContext(ctx, d.ytdlpPath, link)
 	cmd.Dir = downloadPath
 
-	if runtime.GOOS == "windows" {
-		cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000}
-	}
+	setPlatformSysProcAttr(cmd)
 
 	err := cmd.Run()
 	if err != nil {

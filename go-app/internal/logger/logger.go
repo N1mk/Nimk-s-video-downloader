@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
-	"syscall"
 	"time"
 )
 
@@ -47,9 +46,6 @@ func (l *DownloaderLogger) OpenLogFile() error {
 	switch runtime.GOOS {
 	case "windows":
 		cmd = exec.Command("notepad.exe", fullFilePath)
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			CreationFlags: 0x00000010,
-		}
 	case "darwin": // macOS
 		cmd = exec.Command("open", fullFilePath)
 	case "linux":
@@ -57,6 +53,8 @@ func (l *DownloaderLogger) OpenLogFile() error {
 	default:
 		return fmt.Errorf("unknown OS: %s", runtime.GOOS)
 	}
+
+	setPlatformSysProcAttr(cmd)
 
 	if err := cmd.Start(); err != nil {
 		return err
