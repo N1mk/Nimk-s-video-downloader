@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"syscall"
 )
 
@@ -32,7 +33,10 @@ func (d *Downloader) UpdatePath() error {
 
 func (d *Downloader) Update(ctx context.Context) error {
 	cmd := exec.CommandContext(ctx, d.ytdlpPath, "-U")
-	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000}
+
+	if runtime.GOOS == "windows" {
+		cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000}
+	}
 
 	err := cmd.Run()
 	if ctx.Err() == context.DeadlineExceeded {
@@ -47,7 +51,10 @@ func (d *Downloader) Update(ctx context.Context) error {
 func (d *Downloader) Download(ctx context.Context, link string, downloadPath string) error {
 	cmd := exec.CommandContext(ctx, d.ytdlpPath, link)
 	cmd.Dir = downloadPath
-	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000}
+
+	if runtime.GOOS == "windows" {
+		cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000}
+	}
 
 	err := cmd.Run()
 	if err != nil {

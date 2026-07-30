@@ -25,13 +25,14 @@ import (
 func main() {
 	exePath, err := os.Executable()
 	if err != nil {
-		fmt.Printf("Work directory check error: %s", err.Error())
+		fmt.Printf("FATAL: Work directory check error: %s\n", err.Error())
+		os.Exit(1)
 	}
 	os.Chdir(filepath.Dir(exePath))
 
 	dl, err := logger.InitDownloaderLogger("app.log")
 	if err != nil {
-		fmt.Printf("Logger initialization error: %s", err.Error())
+		fmt.Printf("Logger initialization error: %s\n", err.Error())
 		os.Exit(1)
 	}
 
@@ -39,7 +40,8 @@ func main() {
 	defer closeDepsCtx()
 
 	if err := deps_downloader.DownloadDeps(depsDowCtx, dl); err != nil {
-		dl.LogError(fmt.Sprintf("Dependencies download error: %s", err.Error()))
+		dl.LogFatal(fmt.Sprintf("Dependencies download error: %s", err.Error()))
+		os.Exit(1)
 	}
 	dl.LogInfo("All dependencies are installed!")
 

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 )
@@ -56,7 +57,10 @@ func (c *Convertor) Convert(ctx context.Context, dirPath string, extension strin
 
 		cmd := exec.CommandContext(ctx, c.ffmpegPath, "-i", name, outName)
 		cmd.Dir = dirPath
-		cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000}
+
+		if runtime.GOOS == "windows" {
+			cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000}
+		}
 
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("convert command run error: %w", err)
