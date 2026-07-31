@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"nvd/internal/config_reader"
+	"nvd/internal/downloader"
 	"nvd/internal/logger"
 	"nvd/internal/models"
 	"nvd/internal/service"
@@ -18,10 +19,11 @@ type ExtensionHandler struct {
 	svc *service.DownloadService
 	dl  *logger.DownloaderLogger
 	cr  *config_reader.ConfigReader
+	dow *downloader.Downloader
 }
 
-func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *logger.DownloaderLogger, cr *config_reader.ConfigReader) *ExtensionHandler {
-	return &ExtensionHandler{ctx: ctx, svc: svc, dl: dl, cr: cr}
+func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *logger.DownloaderLogger, cr *config_reader.ConfigReader, dow *downloader.Downloader) *ExtensionHandler {
+	return &ExtensionHandler{ctx: ctx, svc: svc, dl: dl, cr: cr, dow: dow}
 }
 
 func (h *ExtensionHandler) PostDownload(w http.ResponseWriter, r *http.Request) {
@@ -105,5 +107,14 @@ func (h *ExtensionHandler) PostLogs(w http.ResponseWriter, r *http.Request) {
 	if err := h.dl.OpenLogFile(); err != nil {
 		h.dl.LogError(fmt.Sprintf("Logger error: %s", err.Error()))
 		http.Error(w, "Cannot open log file", http.StatusInternalServerError)
+	}
+}
+
+func (h *ExtensionHandler) PostDownloaderUpdate(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	if err := h.dow.Update(h.ctx); err != nil {
+		h.dl.LogError(fmt.Sprintf("Downloader update error: %s", err.Error()))
+		http.Error(w, "Update error", http.StatusInternalServerError)
 	}
 }

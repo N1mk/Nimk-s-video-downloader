@@ -80,6 +80,26 @@ document.getElementById('openLogsBtn').addEventListener('click', async () => {
   }
 });
 
+document.getElementById('updateLoaderBtn').addEventListener('click', async () => {
+  const statusDiv = document.getElementById('status');
+  statusDiv.innerText = 'Обновление загрузчика...';
+  
+  try {
+    const response = await fetch('http://localhost:8080/update', {
+      method: 'POST'
+    });
+    
+    if (response.ok) {
+      statusDiv.innerText = 'Загрузчик успешно обновлен!';
+    } else {
+      statusDiv.innerText = `Ошибка обновления: ${response.status} ${response.statusText}`;
+    }
+  } catch (error) {
+    statusDiv.innerText = 'Ошибка подключения к серверу обновлений';
+    console.error(error);
+  }
+});
+
 let statusIntervalId = null;
 
 document.getElementById('sendBtn').addEventListener('click', async () => {

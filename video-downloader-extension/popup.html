@@ -59,8 +59,13 @@
     }
     .btn-save {
       background-color: #4CAF50;
-      padding: 6px;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 10px;
       font-size: 12px;
+      cursor: pointer;
+      float: left;
     }
     .btn-save:hover {
       background-color: #45a049;
@@ -77,6 +82,21 @@
     }
     .btn-logs:hover {
       background-color: #0b7dda;
+    }
+    .btn-update {
+      width: 100%;
+      background-color: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 8px;
+      box-sizing: border-box;
+    }
+    .btn-update:hover {
+      background-color: #e68a00;
     }
     .settings-actions {
       overflow: hidden;
@@ -131,6 +151,7 @@
     <div class="settings-actions">
       <button id="saveConfigBtn" class="btn-save">Сохранить</button>
       <button id="openLogsBtn" class="btn-logs">Открыть логи</button>
+      <button id="updateLoaderBtn" class="btn-update">Обновить загрузчик</button>
     </div>
   </div>
 

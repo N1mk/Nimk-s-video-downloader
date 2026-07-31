@@ -62,14 +62,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	dowUpdCtx, closeDowCtx := context.WithTimeout(context.Background(), 10*time.Minute)
-	defer closeDowCtx()
-
-	if err := dow.Update(dowUpdCtx); err != nil {
-		dl.LogFatal(fmt.Sprintf("Downloader update error: %s", err.Error()))
-		os.Exit(1)
-	}
-
 	con := convertor.NewConvertor()
 	if err := con.UpdatePath(); err != nil {
 		dl.LogFatal(fmt.Sprintf("Convertor path update error: %s", err.Error()))
@@ -90,7 +82,7 @@ func main() {
 
 	svc.CreateWorkers(5)
 
-	h := handler.NewExtensionHandler(ctx, svc, dl, cr)
+	h := handler.NewExtensionHandler(ctx, svc, dl, cr, dow)
 
 	r := chi.NewRouter()
 
@@ -99,6 +91,7 @@ func main() {
 	r.Get("/config", h.GetConfig)
 	r.Post("/config", h.PostConfig)
 	r.Post("/logs", h.PostLogs)
+	r.Post("/update", h.PostDownloaderUpdate)
 
 	go http.ListenAndServe("localhost:8080", r)
 
