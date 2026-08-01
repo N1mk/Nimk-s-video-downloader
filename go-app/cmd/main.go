@@ -87,6 +87,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(handler.CorsMiddleware)
+	r.Use(dl.Middleware)
 
 	r.Post("/download", h.PostDownload)
 	r.Post("/status", h.PostJobStatusRequest)

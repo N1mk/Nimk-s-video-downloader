@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -145,4 +146,10 @@ func (l *DownloaderLogger) LogError(s string) {
 
 func (l *DownloaderLogger) LogFatal(s string) {
 	l.logger.Error(fmt.Sprintf("FATAL: %s", s))
+}
+
+func (l *DownloaderLogger) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		l.LogInfo(fmt.Sprintf("Got %s request on localhost:8080%s", r.Method, r.Pattern))
+	})
 }
