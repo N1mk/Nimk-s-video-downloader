@@ -1,111 +1,65 @@
-async function loadConfig() {
-  const statusDiv = document.getElementById('status');
-  const pathInput = document.getElementById('downloadPathInput');
-  
-  try {
-    const response = await fetch('http://localhost:8080/config', {
-      method: 'GET'
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      if (data && data.download_path !== undefined) {
-        pathInput.value = data.download_path;
+const statusDiv = document.getElementById('status');
+const pathInput = document.getElementById('downloadPathInput');
+let statusIntervalId = null;
+
+function loadConfig() {
+  chrome.runtime.sendMessage({ action: 'fetchGet', path: '/config' }, response => {
+    if (response && response.success) {
+      if (response.data && response.data.download_path !== undefined) {
+        pathInput.value = response.data.download_path;
       }
     } else {
-      console.error('Не удалось открыть конфиг:', response.status);
+      statusDiv.innerText = 'Предупреждение: Не удалось подключиться к серверу для загрузки настроек';
     }
-  } catch (error) {
-    statusDiv.innerText = 'Предупреждение: Не удалось подключиться к localhost:8080 для загрузки настроек';
-    console.error(error);
-  }
+  });
 }
-
 loadConfig();
 
 document.getElementById('toggleSettingsBtn').addEventListener('click', () => {
   const settingsMenu = document.getElementById('settingsMenu');
-  if (settingsMenu.style.display === 'block') {
-    settingsMenu.style.display = 'none';
-  } else {
-    settingsMenu.style.display = 'block';
-  }
+  settingsMenu.style.display = settingsMenu.style.display === 'block' ? 'none' : 'block';
 });
 
-document.getElementById('saveConfigBtn').addEventListener('click', async () => {
-  const statusDiv = document.getElementById('status');
-  const pathInput = document.getElementById('downloadPathInput');
-  
+document.getElementById('saveConfigBtn').addEventListener('click', () => {
   statusDiv.innerText = 'Сохранение конфигурации...';
-  
-  try {
-    const response = await fetch('http://localhost:8080/config', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        download_path: pathInput.value
-      })
-    });
-    
-    if (response.ok) {
+  chrome.runtime.sendMessage({ 
+    action: 'fetchPost', 
+    path: '/config', 
+    body: { download_path: pathInput.value } 
+  }, response => {
+    if (response && response.success) {
       statusDiv.innerText = 'Конфигурация успешно сохранена!';
-      document.getElementById('settingsMenu').style.display = 'none'; 
+      document.getElementById('settingsMenu').style.display = 'none';
     } else {
-      statusDiv.innerText = `Ошибка сохранения: ${response.status} ${response.statusText}`;
+      statusDiv.innerText = `Ошибка сохранения: ${response?.status || 'нет связи'}`;
     }
-  } catch (error) {
-    console.error(error);
-  }
+  });
 });
 
-document.getElementById('openLogsBtn').addEventListener('click', async () => {
-  const statusDiv = document.getElementById('status');
+document.getElementById('openLogsBtn').addEventListener('click', () => {
   statusDiv.innerText = 'Открытие файла логов...';
-  
-  try {
-    const response = await fetch('http://localhost:8080/logs', {
-      method: 'POST'
-    });
-    
-    if (response.ok) {
+  chrome.runtime.sendMessage({ action: 'fetchPost', path: '/logs' }, response => {
+    if (response && response.success) {
       statusDiv.innerText = 'Файл логов открыт!';
     } else {
-      statusDiv.innerText = `Ошибка открытия файла логов: ${response.status} ${response.statusText}`;
+      statusDiv.innerText = `Ошибка открытия файла логов: ${response?.status || 'нет связи'}`;
     }
-  } catch (error) {
-    statusDiv.innerText = 'Ошибка подключения к серверу логов';
-    console.error(error);
-  }
+  });
 });
 
-document.getElementById('updateLoaderBtn').addEventListener('click', async () => {
-  const statusDiv = document.getElementById('status');
+document.getElementById('updateLoaderBtn').addEventListener('click', () => {
   statusDiv.innerText = 'Обновление загрузчика...';
-  
-  try {
-    const response = await fetch('http://localhost:8080/update', {
-      method: 'POST'
-    });
-    
-    if (response.ok) {
+  chrome.runtime.sendMessage({ action: 'fetchPost', path: '/update' }, response => {
+    if (response && response.success) {
       statusDiv.innerText = 'Загрузчик успешно обновлен!';
     } else {
-      statusDiv.innerText = `Ошибка обновления: ${response.status} ${response.statusText}`;
+      statusDiv.innerText = `Ошибка обновления: ${response?.status || 'нет связи'}`;
     }
-  } catch (error) {
-    statusDiv.innerText = 'Ошибка подключения к серверу обновлений';
-    console.error(error);
-  }
+  });
 });
 
-let statusIntervalId = null;
-
 document.getElementById('sendBtn').addEventListener('click', async () => {
-  const statusDiv = document.getElementById('status');
   const formatSelect = document.getElementById('formatSelect');
-  
   const selectedExtension = formatSelect.value;
 
   statusDiv.innerText = 'Проверяем вкладку...';
@@ -122,45 +76,24 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
   const host = urlObj.hostname;
   const path = urlObj.pathname;
 
-  // --- YouTube & YouTube Music ---
-  if ((host.includes('youtube.com') || host.includes('music.youtube.com')) && path === '/watch') {
+  if ((host.includes('youtube.com') || host.includes('://youtube.com')) && path === '/watch') {
     const videoId = urlObj.searchParams.get('v');
-    if (videoId) {
-      cleanUrl = `https://youtube.com/watch?v=${videoId}`;
-    }
+    if (videoId) cleanUrl = `https://youtube.com/watch?v=${videoId}`;
   } else if (host.includes('youtu.be')) {
     const videoId = path.substring(1);
-    if (videoId) {
-      cleanUrl = `https://youtube.com/watch?v=${videoId}`;
-    }
-
-  // --- Yandex Music (WIP) ---
-  //} else if (host.includes('music.yandex.')) {
-  //  const trackRegex = /\/album\/\d+\/track\/(\d+)/;
-  //  const match = path.match(trackRegex);
-  //  if (match) {
-  //    cleanUrl = `https://music.yandex.ru/track/${match[1]}`;
-  //  }
-
-  // --- SoundCloud ---
+    if (videoId) cleanUrl = `https://youtube.com/watch?v=${videoId}`;
   } else if (host.includes('soundcloud.com')) {
     const isPlaylist = path.includes('/sets') || path.includes('/albums') || path.includes('/playlists');
     const systemPaths = ['/discover', '/stream', '/charts', '/search', '/upload', '/messages', '/notifications', '/you'];
     const isSystem = systemPaths.some(p => path.startsWith(p));
-    
     const pathSegments = path.split('/').filter(Boolean);
-    
     if (!isPlaylist && !isSystem && pathSegments.length === 2) {
       cleanUrl = `https://soundcloud.com/${pathSegments[0]}/${pathSegments[1]}`;
     }
-
-  // --- Rutube ---
   } else if (host.includes('rutube.ru')) {
     const rutubeRegex = /^\/video\/([a-zA-Z0-9]+)/;
     const match = path.match(rutubeRegex);
-    if (match) {
-      cleanUrl = `https://rutube.ru/${match[1]}/`;
-    }
+    if (match) cleanUrl = `https://rutube.ru/${match[1]}/`;
   }
 
   if (!cleanUrl) {
@@ -169,81 +102,53 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
   }
 
   statusDiv.innerText = 'Начало загрузки...';
-
   const randomId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
 
-  try {
-    const response = await fetch('http://localhost:8080/download', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        url: cleanUrl,
-        extension: selectedExtension,
-        id: randomId
-      })
-    });
-
-    if (response.ok) {
+  chrome.runtime.sendMessage({
+    action: 'fetchPost',
+    path: '/download',
+    body: { url: cleanUrl, extension: selectedExtension, id: randomId }
+  }, response => {
+    if (response && response.success) {
       statusDiv.innerText = `Загрузка начата!`;
       startStatusPolling(randomId);
     } else {
-      statusDiv.innerText = `Ошибка: ${response.status} ${response.statusText}`;
+      statusDiv.innerText = `Ошибка подключения: убедитесь, что go приложение запущено`;
     }
-  } catch (error) {
-    statusDiv.innerText = `Ошибка подключения: убедитесь, что go приложение запущено`;
-    console.error(error);
-  }
+  });
 });
 
 function startStatusPolling(id) {
-  const statusDiv = document.getElementById('status');
-  
-  if (statusIntervalId) {
-    clearInterval(statusIntervalId);
-  }
+  if (statusIntervalId) clearInterval(statusIntervalId);
 
   const startTime = Date.now();
   const maxDuration = 5 * 60 * 1000;
 
-  statusIntervalId = setInterval(async () => {
+  statusIntervalId = setInterval(() => {
     if (Date.now() - startTime > maxDuration) {
       clearInterval(statusIntervalId);
       statusDiv.innerText = 'Загрузка заняла слишком много времени\nПроверьте папку загрузок';
       return;
     }
 
-    try {
-      const response = await fetch('http://localhost:8080/status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          url: "",
-          extension: "",
-          id: id
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+    chrome.runtime.sendMessage({
+      action: 'fetchPost',
+      path: '/status',
+      body: { url: "", extension: "", id: id }
+    }, response => {
+      if (response && response.success && response.data) {
+        const data = response.data;
         
         if (data.status === 'in process') {
           statusDiv.innerText = `Видео скачивается... (ID: ${id})`;
         } else if (data.status === 'error') {
           statusDiv.innerText = `Ошибка: ${data.error || 'Неизвестная ошибка при загрузке'}`;
-          clearInterval(statusIntervalId); 
+          clearInterval(statusIntervalId);
         } else if (data.status === 'complete') {
           statusDiv.innerText = 'Загрузка завершена!';
-          clearInterval(statusIntervalId); 
+          clearInterval(statusIntervalId);
         }
-      } else {
-        console.error('Ошибка проверки статуса загрузки:', response.status);
       }
-    } catch (error) {
-      console.error('Ошибка сети при проверки статуса загрузки:', error);
-    }
+    });
   }, 10000);
 }

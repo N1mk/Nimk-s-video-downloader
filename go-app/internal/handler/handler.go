@@ -118,3 +118,17 @@ func (h *ExtensionHandler) PostDownloaderUpdate(w http.ResponseWriter, r *http.R
 		http.Error(w, "Update error", http.StatusInternalServerError)
 	}
 }
+
+func (h *ExtensionHandler) Options(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	w.WriteHeader(http.StatusOK)
+}
+
+func CorsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		next.ServeHTTP(w, r)
+	})
+}
