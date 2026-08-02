@@ -73,6 +73,8 @@ func (h *ExtensionHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Config reading error", http.StatusInternalServerError)
 	}
 
+	h.dl.LogInfo("lellel")
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
@@ -127,7 +129,13 @@ func (h *ExtensionHandler) Options(w http.ResponseWriter, r *http.Request) {
 
 func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		next.ServeHTTP(w, r)
 	})

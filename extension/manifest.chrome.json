@@ -7,14 +7,14 @@
     "default_popup": "popup.html"
   },
   "permissions": [
-    "activeTab",
+    "tabs",
     "nativeMessaging"
   ],
   "background": {
-  "service_worker": ["background.js"]
+  "service_worker": "background.js"
   },
   "host_permissions": [
-    "http://localhost:8080/"
+    "http://localhost:8080/*"
   ],
   "icons": {
     "16": "icon-16.png",
