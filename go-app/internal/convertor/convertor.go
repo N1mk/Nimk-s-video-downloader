@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -18,13 +19,25 @@ func NewConvertor() *Convertor {
 }
 
 func (c *Convertor) UpdatePath() error {
+	var ffmpegName string
+	switch runtime.GOOS {
+	case "windows":
+		ffmpegName = "ffmpeg.exe"
+	case "linux":
+		ffmpegName = "ffmpeg"
+	case "darwin":
+		ffmpegName = "ffmpeg"
+	default:
+		return fmt.Errorf("unkonown OS")
+	}
+
 	exePath, err := os.Executable()
 	if err != nil {
 		return err
 	}
 
 	dir := filepath.Dir(exePath)
-	c.ffmpegPath = filepath.Join(dir, "ffmpeg.exe")
+	c.ffmpegPath = filepath.Join(dir, ffmpegName)
 
 	return nil
 }

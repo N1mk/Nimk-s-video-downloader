@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 )
 
 type Downloader struct {
@@ -18,13 +19,25 @@ func NewDownloader() *Downloader {
 }
 
 func (d *Downloader) UpdatePath() error {
+	var ytDlpName string
+	switch runtime.GOOS {
+	case "windows":
+		ytDlpName = "yt-dlp.exe"
+	case "linux":
+		ytDlpName = "yt-dlp_linux"
+	case "darwin":
+		ytDlpName = "yt-dlp_macos"
+	default:
+		return fmt.Errorf("unkonown OS")
+	}
+
 	exePath, err := os.Executable()
 	if err != nil {
 		return err
 	}
 
 	dir := filepath.Dir(exePath)
-	d.ytdlpPath = filepath.Join(dir, "yt-dlp.exe")
+	d.ytdlpPath = filepath.Join(dir, ytDlpName)
 
 	return nil
 }
