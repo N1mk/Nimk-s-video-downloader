@@ -28,7 +28,7 @@ func (d *Downloader) UpdatePath() error {
 	case "darwin":
 		ytDlpName = "yt-dlp_macos"
 	default:
-		return fmt.Errorf("unkonown OS")
+		return models.ErrUnknownOS
 	}
 
 	exePath, err := os.Executable()

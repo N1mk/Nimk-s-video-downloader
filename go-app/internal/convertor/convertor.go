@@ -3,6 +3,7 @@ package convertor
 import (
 	"context"
 	"fmt"
+	"nvd/internal/models"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,7 +29,7 @@ func (c *Convertor) UpdatePath() error {
 	case "darwin":
 		ffmpegName = "ffmpeg"
 	default:
-		return fmt.Errorf("unkonown OS")
+		return models.ErrUnknownOS
 	}
 
 	exePath, err := os.Executable()

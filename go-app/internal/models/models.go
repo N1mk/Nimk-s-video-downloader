@@ -8,6 +8,7 @@ import (
 var (
 	ErrDeadlineExceeded error  = errors.New("deadline exceeded")
 	ErrNotFound         error  = errors.New("not found")
+	ErrUnknownOS        error  = errors.New("unknown os")
 	JobStatusInProcess  string = "in process"
 	JobStatusError      string = "error"
 	JobStatusComplete   string = "complete"

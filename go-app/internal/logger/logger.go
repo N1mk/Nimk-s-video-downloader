@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"nvd/internal/models"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -52,7 +53,7 @@ func (l *DownloaderLogger) OpenLogFile() error {
 	case "linux":
 		cmd = exec.Command("xdg-open", fullFilePath)
 	default:
-		return fmt.Errorf("unknown OS: %s", runtime.GOOS)
+		return models.ErrUnknownOS
 	}
 
 	setPlatformSysProcAttr(cmd)
