@@ -73,8 +73,6 @@ func (h *ExtensionHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Config reading error", http.StatusInternalServerError)
 	}
 
-	h.dl.LogInfo("lellel")
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
