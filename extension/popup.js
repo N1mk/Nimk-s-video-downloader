@@ -93,7 +93,7 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
   } else if (host.includes('rutube.ru')) {
     const rutubeRegex = /^\/video\/([a-zA-Z0-9]+)/;
     const match = path.match(rutubeRegex);
-    if (match) cleanUrl = `https://rutube.ru/${match[1]}/`;
+    if (match) cleanUrl = `https://rutube.ru/video/${match[1]}/?r=wd`;
   }
 
   if (!cleanUrl) {

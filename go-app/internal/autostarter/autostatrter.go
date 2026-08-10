@@ -11,8 +11,6 @@ import (
 	"github.com/emersion/go-autostart"
 )
 
-const linuxServiceName string = "nvd"
-
 func AddToAutostart(dl *logger.DownloaderLogger) (ok bool, err error) {
 	exePath, err := os.Executable()
 	if err != nil {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"syscall"
 
 	"net/http"
 	"nvd/internal/autostarter"
@@ -75,7 +76,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, close := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	ctx, close := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer close()
 
 	svc := service.NewDownloadService(ctx, config.DownloadPath, dl, dow, con)

@@ -48,7 +48,7 @@ func (l *DownloaderLogger) OpenLogFile() error {
 	switch runtime.GOOS {
 	case "windows":
 		cmd = exec.Command("notepad.exe", fullFilePath)
-	case "darwin": // macOS
+	case "darwin":
 		cmd = exec.Command("open", fullFilePath)
 	case "linux":
 		cmd = exec.Command("xdg-open", fullFilePath)
@@ -92,6 +92,17 @@ func (l *DownloaderLogger) Shutdown() error {
 	}
 	var filteredFiles []fileInfo
 
+	l.file.Close()
+	if err := os.Rename(logFilePath, fmt.Sprintf("%s/app %v.log", oldLogsPath, time.Now().Format("2006-01-02_15-04-05"))); err != nil {
+		return fmt.Errorf("log file moving error: %w", err)
+	}
+
+	file, err := os.Create(logFilePath)
+	if err != nil {
+		return fmt.Errorf("log file creation error: %w", err)
+	}
+	file.Close()
+
 	for _, f := range files {
 		if f.IsDir() {
 			continue
@@ -103,7 +114,7 @@ func (l *DownloaderLogger) Shutdown() error {
 		filteredFiles = append(filteredFiles, fileInfo{entry: f, modTime: info.ModTime()})
 	}
 
-	if len(filteredFiles) <= 2 {
+	if len(filteredFiles) <= 3 {
 		return nil
 	}
 
@@ -122,17 +133,6 @@ func (l *DownloaderLogger) Shutdown() error {
 			return fmt.Errorf("old log file removing error: %w", err)
 		}
 	}
-
-	l.file.Close()
-	if err := os.Rename(logFilePath, fmt.Sprintf("%s/app %v.log", oldLogsPath, time.Now().Format("2006-01-02_15-04-05"))); err != nil {
-		return fmt.Errorf("log file moving error: %w", err)
-	}
-
-	file, err := os.Create(logFilePath)
-	if err != nil {
-		return fmt.Errorf("log file creation error: %w", err)
-	}
-	file.Close()
 
 	return nil
 }
