@@ -76,7 +76,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, close := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	ctx, close := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer close()
 
 	svc := service.NewDownloadService(ctx, config.DownloadPath, dl, dow, con)
@@ -110,13 +110,6 @@ func main() {
 	})
 
 	go http.ListenAndServe("localhost:8080", r)
-
-	<-ctx.Done()
-
-	dl.LogInfo("Shutdowning")
-	if err := dl.Shutdown(); err != nil {
-		dl.LogError(fmt.Sprintf("Logger shutdowning error: %s", err.Error()))
-	}
 
 	svc.Wg.Wait()
 }

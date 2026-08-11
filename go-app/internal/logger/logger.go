@@ -20,19 +20,22 @@ type DownloaderLogger struct {
 }
 
 func InitDownloaderLogger(filePath string) (*DownloaderLogger, error) {
+	dl := &DownloaderLogger{filePath: filePath}
+
+	dl.rotate()
+
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		slog.Error("Cannot open log file")
 		return nil, err
 	}
+	dl.file = file
 
-	logger := slog.New(slog.NewTextHandler(file, nil))
-
-	dl := DownloaderLogger{logger: logger, filePath: filePath, file: file}
+	dl.logger = slog.New(slog.NewTextHandler(file, nil))
 
 	dl.LogInfo("App started!")
 
-	return &dl, nil
+	return dl, nil
 }
 
 func (l *DownloaderLogger) OpenLogFile() error {
@@ -66,7 +69,7 @@ func (l *DownloaderLogger) OpenLogFile() error {
 	return nil
 }
 
-func (l *DownloaderLogger) Shutdown() error {
+func (l *DownloaderLogger) rotate() error {
 	exePath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("exe path retrieving error: %w", err)
@@ -92,7 +95,6 @@ func (l *DownloaderLogger) Shutdown() error {
 	}
 	var filteredFiles []fileInfo
 
-	l.file.Close()
 	if err := os.Rename(logFilePath, fmt.Sprintf("%s/app %v.log", oldLogsPath, time.Now().Format("2006-01-02_15-04-05"))); err != nil {
 		return fmt.Errorf("log file moving error: %w", err)
 	}
@@ -113,8 +115,9 @@ func (l *DownloaderLogger) Shutdown() error {
 		}
 		filteredFiles = append(filteredFiles, fileInfo{entry: f, modTime: info.ModTime()})
 	}
+	filesCount := len(filteredFiles) + 1
 
-	if len(filteredFiles) <= 3 {
+	if filesCount <= 3 {
 		return nil
 	}
 
@@ -122,7 +125,7 @@ func (l *DownloaderLogger) Shutdown() error {
 		return filteredFiles[i].modTime.Before(filteredFiles[j].modTime)
 	})
 
-	toRemoveCount := len(filteredFiles) - 2
+	toRemoveCount := filesCount - 3
 
 	for i := 0; i < toRemoveCount; i++ {
 		fileToDelete := filteredFiles[i].entry
