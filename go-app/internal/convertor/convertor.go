@@ -43,8 +43,8 @@ func (c *Convertor) UpdatePath() error {
 	return nil
 }
 
-func (c *Convertor) Convert(ctx context.Context, dirPath string, extension string) error {
-	if extension == "webm" {
+func (c *Convertor) Convert(ctx context.Context, dirPath string, neededExt string) error {
+	if neededExt == "webm" {
 		return nil
 	}
 
@@ -58,16 +58,16 @@ func (c *Convertor) Convert(ctx context.Context, dirPath string, extension strin
 			continue
 		}
 
-		name := file.Name()
-		ext := strings.ToLower(filepath.Ext(name))
+		currentName := file.Name()
+		currentExt := strings.ToLower(filepath.Ext(currentName))
 
-		if ext == ".mp4" || ext == ".mov" || ext == ".mp3" || ext == ".aac" || ext == ".wav" || ext == "" {
+		if currentExt == ".mp4" || currentExt == ".mov" || currentExt == ".mp3" || currentExt == ".aac" || currentExt == ".wav" || currentExt == "" {
 			continue
 		}
 
-		outName := strings.TrimSuffix(name, filepath.Ext(name)) + "." + extension
+		outName := strings.TrimSuffix(currentName, filepath.Ext(currentName)) + "." + neededExt
 
-		cmd := exec.CommandContext(ctx, c.ffmpegPath, "-i", name, outName)
+		cmd := exec.CommandContext(ctx, c.ffmpegPath, "-i", currentName, outName)
 		cmd.Dir = dirPath
 
 		setPlatformSysProcAttr(cmd)
@@ -76,7 +76,7 @@ func (c *Convertor) Convert(ctx context.Context, dirPath string, extension strin
 			return fmt.Errorf("convert command run error: %w", err)
 		}
 
-		if err := os.Remove(fmt.Sprintf("%s/%s", dirPath, name)); err != nil {
+		if err := os.Remove(fmt.Sprintf("%s/%s", dirPath, currentName)); err != nil {
 			return fmt.Errorf("delete command run error: %w", err)
 		}
 	}
