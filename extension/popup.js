@@ -2,6 +2,23 @@ const statusDiv = document.getElementById('status');
 const pathInput = document.getElementById('downloadPathInput');
 let statusIntervalId = null;
 
+const selectEl = document.getElementById('formatSelect');
+const wrapperEl = document.getElementById('selectWrapper');
+
+if (selectEl && wrapperEl) {
+  selectEl.addEventListener('focus', () => {
+    wrapperEl.classList.add('is-open');
+  });
+
+  selectEl.addEventListener('change', () => {
+    selectEl.blur();
+  });
+
+  selectEl.addEventListener('blur', () => {
+    wrapperEl.classList.remove('is-open');
+  });
+}
+
 function loadConfig() {
   chrome.runtime.sendMessage({ action: 'fetchGet', path: '/config' }, response => {
     if (response && response.success) {
@@ -29,9 +46,8 @@ document.getElementById('saveConfigBtn').addEventListener('click', () => {
   }, response => {
     if (response && response.success) {
       statusDiv.innerText = 'Конфигурация успешно сохранена!';
-      document.getElementById('settingsMenu').style.display = 'none';
     } else {
-      statusDiv.innerText = `Ошибка сохранения: ${response?.status || 'нет связи'}`;
+      statusDiv.innerText = `Ошибка обновления: ${response?.status || 'нет связи'}`;
     }
   });
 });

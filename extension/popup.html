@@ -2,174 +2,266 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+  
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Montserrat', sans-serif;
       width: 250px;
-      padding: 12px;
+      padding: 16px;
       margin: 0;
       position: relative;
+      background-color: #1A1314;
+      color: #FFFFFF;
+      box-sizing: border-box;
     }
+    
     .settings-toggle {
       position: absolute;
-      top: 10px;
-      left: 12px;
+      top: 14px;
+      left: 16px;
       background: none;
       border: none;
-      font-size: 16px;
       cursor: pointer;
       padding: 0;
-      width: auto;
-      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .settings-toggle:hover {
-      background: none;
-      color: #000;
+    .settings-toggle svg {
+      width: 18px;
+      height: 18px;
+      fill: #FFFFFF;
+      opacity: 0.6;
+      transition: opacity 0.2s ease, transform 0.3s ease;
     }
+    .settings-toggle:hover svg {
+      opacity: 1;
+      transform: rotate(45deg);
+    }
+    
     h3 {
       margin-top: 0;
-      margin-bottom: 15px;
-      color: #333;
+      margin-bottom: 16px;
+      color: #FFFFFF;
       font-size: 14px;
+      font-weight: 700;
       text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+    
+    .divider {
+      height: 1px;
+      background-color: rgba(255, 255, 255, 0.15);
+      margin: 16px 0;
+      border: none;
+    }
+    
     #settingsMenu {
       display: none;
-      background-color: #f9f9f9;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 10px;
-      margin-bottom: 12px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
       box-sizing: border-box;
     }
     .settings-title {
-      font-weight: bold;
-      font-size: 12px;
-      margin-bottom: 8px;
-      color: #333;
+      font-weight: 500;
+      font-size: 11px;
+      margin-bottom: 10px;
+      color: #FFFFFF;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+    
     input[type="text"] {
       width: 100%;
-      padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      padding: 8px 12px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      font-family: 'Montserrat', sans-serif;
       font-size: 12px;
+      color: #FFFFFF;
       box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s ease;
+      margin-bottom: 10px;
+    }
+    input[type="text"]:focus {
+      border-color: #FF0D31;
+    }
+    input[type="text"]::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+    
+    .select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    
+    select {
+      width: 100%;
+      padding: 8px 36px 8px 12px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      color: #FFFFFF;
+      box-sizing: border-box;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      transition: border-color 0.2s ease;
+    }
+    select:focus {
+      border-color: #FF0D31;
+    }
+    
+    .select-wrapper::after {
+      content: "";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      margin-top: -3px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid rgba(255, 255, 255, 0.6);
+      pointer-events: none;
+      transition: transform 0.15s ease, border-top-color 0.15s ease;
+    }
+    
+    .select-wrapper.is-open::after {
+      transform: rotate(180deg);
+      border-top-color: #FF0D31;
+    }
+    
+    select option {
+      background-color: #1A1314;
+      color: #FFFFFF;
+    }
+    
+    button {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    .settings-actions-row {
+      display: flex;
+      gap: 8px;
       margin-bottom: 8px;
     }
-    .btn-save {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 6px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      float: left;
+    .btn-save, .btn-logs {
+      flex: 1;
+      padding: 8px;
+      font-size: 11px;
+      color: #FFFFFF;
+      background-color: rgba(255, 255, 255, 0.1);
     }
-    .btn-save:hover {
-      background-color: #45a049;
+    .btn-save:hover, .btn-logs:hover {
+      background-color: rgba(255, 255, 255, 0.2);
     }
-    .btn-logs {
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 6px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      float: right;
-    }
-    .btn-logs:hover {
-      background-color: #0b7dda;
-    }
+    
     .btn-update {
       width: 100%;
-      background-color: #ff9800;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 6px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      margin-top: 8px;
+      padding: 8px;
+      font-size: 11px;
+      color: #FFFFFF;
+      background-color: rgba(255, 255, 255, 0.1);
       box-sizing: border-box;
     }
     .btn-update:hover {
-      background-color: #e68a00;
+      background-color: rgba(255, 255, 255, 0.2);
     }
-    .settings-actions {
-      overflow: hidden;
-      margin-top: 4px;
-    }
+    
     .field-group {
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
     label {
       display: block;
       font-size: 12px;
-      color: #555;
-      margin-bottom: 4px;
+      font-weight: 500;
+      color: #FFFFFF;
+      opacity: 0.8;
+      margin-bottom: 8px;
     }
-    select {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 13px;
-      box-sizing: border-box;
-    }
+    
     #sendBtn {
       width: 100%;
-      padding: 10px;
-      background-color: #ff0000;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
+      padding: 12px;
+      background-color: #FF0D31;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
     #sendBtn:hover {
-      background-color: #cc0000;
+      background-color: #e00024;
     }
+    
     #status {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #666;
+      font-size: 11px;
+      color: #FFFFFF;
+      opacity: 0.5;
+      text-align: center;
       word-break: break-word;
     }
   </style>
 </head>
 <body>
-  <button id="toggleSettingsBtn" class="settings-toggle" title="Настройки">⚙️</button>
+  <button id="toggleSettingsBtn" class="settings-toggle" title="Настройки">
+    <svg viewBox="0 0 24 24">
+      <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1a9.86 9.86 0 0 0-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.45-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l-.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+    </svg>
+  </button>
 
-  <h3>Загрузка трека / видео</h3>
+  <h3>NVD</h3>
   
   <div id="settingsMenu">
-    <div class="settings-title">Настройки конфигурации</div>
+    <div class="settings-title">Конфигурация</div>
     <input type="text" id="downloadPathInput" placeholder="Путь для загрузки...">
-    <div class="settings-actions">
+    <div class="settings-actions-row">
       <button id="saveConfigBtn" class="btn-save">Сохранить</button>
-      <button id="openLogsBtn" class="btn-logs">Открыть логи</button>
-      <button id="updateLoaderBtn" class="btn-update">Обновить загрузчик</button>
+      <button id="openLogsBtn" class="btn-logs">Логи</button>
     </div>
+    <button id="updateLoaderBtn" class="btn-update">Обновить загрузчик</button>
   </div>
 
   <div id="mainForm">
     <div class="field-group">
       <label for="formatSelect">Выберите формат:</label>
-      <select id="formatSelect">
-        <option value="mp4">MP4 (Видео)</option>
-        <option value="webm">WebM (Видео)</option>
-        <option value="mov">MOV (Видео)</option>
-        <option value="mp3">MP3 (Аудио)</option>
-        <option value="aac">AAC (Аудио)</option>
-        <option value="wav">WAV (Аудио)</option>
-      </select>
+      <div id="selectWrapper" class="select-wrapper">
+        <select id="formatSelect">
+          <option value="mp4">MP4 (Видео)</option>
+          <option value="webm">WebM (Видео)</option>
+          <option value="mov">MOV (Видео)</option>
+          <option value="mp3">MP3 (Аудио)</option>
+          <option value="aac">AAC (Аудио)</option>
+          <option value="wav">WAV (Аудио)</option>
+        </select>
+      </div>
     </div>
 
     <button id="sendBtn">Скачать</button>
   </div>
+
+  <hr class="divider">
 
   <div id="status">Ожидание действия...</div>
   
