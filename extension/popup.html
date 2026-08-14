@@ -225,7 +225,7 @@
   </style>
 </head>
 <body>
-  <button id="toggleSettingsBtn" class="settings-toggle" title="Настройки">
+  <button id="toggleSettingsBtn" class="settings-toggle" title="Settings">
     <svg viewBox="0 0 24 24">
       <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1a9.86 9.86 0 0 0-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.45-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l-.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
     </svg>
@@ -234,36 +234,36 @@
   <h3>NVD</h3>
   
   <div id="settingsMenu">
-    <div class="settings-title">Конфигурация</div>
-    <input type="text" id="downloadPathInput" placeholder="Путь для загрузки...">
+    <div class="settings-title">Configuration</div>
+    <input type="text" id="downloadPathInput" placeholder="Download destination...">
     <div class="settings-actions-row">
-      <button id="saveConfigBtn" class="btn-save">Сохранить</button>
-      <button id="openLogsBtn" class="btn-logs">Логи</button>
+      <button id="saveConfigBtn" class="btn-save">Save</button>
+      <button id="openLogsBtn" class="btn-logs">Logs</button>
     </div>
-    <button id="updateLoaderBtn" class="btn-update">Обновить загрузчик</button>
+    <button id="updateLoaderBtn" class="btn-update">Update loader</button>
   </div>
 
   <div id="mainForm">
     <div class="field-group">
-      <label for="formatSelect">Выберите формат:</label>
+      <label for="formatSelect">Select a format:</label>
       <div id="selectWrapper" class="select-wrapper">
         <select id="formatSelect">
-          <option value="mp4">MP4 (Видео)</option>
-          <option value="webm">WebM (Видео)</option>
-          <option value="mov">MOV (Видео)</option>
-          <option value="mp3">MP3 (Аудио)</option>
-          <option value="aac">AAC (Аудио)</option>
-          <option value="wav">WAV (Аудио)</option>
+          <option value="mp4">MP4 (Video)</option>
+          <option value="webm">WebM (Video)</option>
+          <option value="mov">MOV (Video)</option>
+          <option value="mp3">MP3 (Audio)</option>
+          <option value="aac">AAC (Audio)</option>
+          <option value="wav">WAV (Audio)</option>
         </select>
       </div>
     </div>
 
-    <button id="sendBtn">Скачать</button>
+    <button id="sendBtn">Download</button>
   </div>
 
   <hr class="divider">
 
-  <div id="status">Ожидание действия...</div>
+  <div id="status">Waiting for action...</div>
   
   <script src="popup.js"></script>
 </body>

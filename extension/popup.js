@@ -26,7 +26,7 @@ function loadConfig() {
         pathInput.value = response.data.download_path;
       }
     } else {
-      statusDiv.innerText = 'Предупреждение: Не удалось подключиться к серверу для загрузки настроек';
+      statusDiv.innerText = 'Warning: Cannot connect to the application';
     }
   });
 }
@@ -38,38 +38,38 @@ document.getElementById('toggleSettingsBtn').addEventListener('click', () => {
 });
 
 document.getElementById('saveConfigBtn').addEventListener('click', () => {
-  statusDiv.innerText = 'Сохранение конфигурации...';
+  statusDiv.innerText = 'Saving the configuration...';
   chrome.runtime.sendMessage({ 
     action: 'fetchPost', 
     path: '/config', 
     body: { download_path: pathInput.value } 
   }, response => {
     if (response && response.success) {
-      statusDiv.innerText = 'Конфигурация успешно сохранена!';
+      statusDiv.innerText = 'Configuration successfully saved!';
     } else {
-      statusDiv.innerText = `Ошибка обновления: ${response?.status || 'нет связи'}`;
+      statusDiv.innerText = `Save error: ${response?.status || 'no conntection'}`;
     }
   });
 });
 
 document.getElementById('openLogsBtn').addEventListener('click', () => {
-  statusDiv.innerText = 'Открытие файла логов...';
+  statusDiv.innerText = 'Opening the log file...';
   chrome.runtime.sendMessage({ action: 'fetchPost', path: '/logs' }, response => {
     if (response && response.success) {
-      statusDiv.innerText = 'Файл логов открыт!';
+      statusDiv.innerText = 'Log file opened!';
     } else {
-      statusDiv.innerText = `Ошибка открытия файла логов: ${response?.status || 'нет связи'}`;
+      statusDiv.innerText = `Log file opening error: ${response?.status || 'no connection'}`;
     }
   });
 });
 
 document.getElementById('updateLoaderBtn').addEventListener('click', () => {
-  statusDiv.innerText = 'Обновление загрузчика...';
+  statusDiv.innerText = 'Updating the loader...';
   chrome.runtime.sendMessage({ action: 'fetchPost', path: '/update' }, response => {
     if (response && response.success) {
-      statusDiv.innerText = 'Загрузчик успешно обновлен!';
+      statusDiv.innerText = 'Loader successfully updated!';
     } else {
-      statusDiv.innerText = `Ошибка обновления: ${response?.status || 'нет связи'}`;
+      statusDiv.innerText = `Update error: ${response?.status || 'no connection'}`;
     }
   });
 });
@@ -78,12 +78,12 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
   const formatSelect = document.getElementById('formatSelect');
   const selectedExtension = formatSelect.value;
 
-  statusDiv.innerText = 'Проверяем вкладку...';
+  statusDiv.innerText = 'Checking the tab...';
   
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   
   if (!tab || !tab.url) {
-    statusDiv.innerText = 'Не удалось определить URL страницы';
+    statusDiv.innerText = 'Cannot determine the page URL';
     return;
   }
 
@@ -113,11 +113,11 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
   }
 
   if (!cleanUrl) {
-    statusDiv.innerText = `Вы не на странице видео/трека`;
+    statusDiv.innerText = `You are not on the player page`;
     return;
   }
 
-  statusDiv.innerText = 'Начало загрузки...';
+  statusDiv.innerText = 'Starting download...';
   const randomId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
 
   chrome.runtime.sendMessage({
@@ -126,10 +126,10 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
     body: { url: cleanUrl, extension: selectedExtension, id: randomId }
   }, response => {
     if (response && response.success) {
-      statusDiv.innerText = `Загрузка начата!`;
+      statusDiv.innerText = `Download started!`;
       startStatusPolling(randomId);
     } else {
-      statusDiv.innerText = `Ошибка подключения: убедитесь, что go приложение запущено`;
+      statusDiv.innerText = `Conection error: make sure the application is running`;
     }
   });
 });
@@ -143,7 +143,7 @@ function startStatusPolling(id) {
   statusIntervalId = setInterval(() => {
     if (Date.now() - startTime > maxDuration) {
       clearInterval(statusIntervalId);
-      statusDiv.innerText = 'Загрузка заняла слишком много времени\nПроверьте папку загрузок';
+      statusDiv.innerText = 'Download took too much time\nCheck the destination';
       return;
     }
 
@@ -156,12 +156,12 @@ function startStatusPolling(id) {
         const data = response.data;
         
         if (data.status === 'in process') {
-          statusDiv.innerText = `Видео скачивается... (ID: ${id})`;
+          statusDiv.innerText = `Video downloading... (ID: ${id})`;
         } else if (data.status === 'error') {
-          statusDiv.innerText = `Ошибка: ${data.error || 'Неизвестная ошибка при загрузке'}`;
+          statusDiv.innerText = `Error: ${data.error || 'unknown error while downloading'}`;
           clearInterval(statusIntervalId);
         } else if (data.status === 'complete') {
-          statusDiv.innerText = 'Загрузка завершена!';
+          statusDiv.innerText = 'Download complete!';
           clearInterval(statusIntervalId);
         }
       }
