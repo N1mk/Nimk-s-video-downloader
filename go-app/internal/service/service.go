@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"nvd/internal/convertor"
 	"nvd/internal/downloader"
@@ -11,20 +12,38 @@ import (
 	"sync"
 )
 
+const (
+	JobStatusInProcess int8 = 0
+	JobStatusError     int8 = 1
+	JobStatusRetrying  int8 = 2
+	JobStatusComplete  int8 = 3
+
+	RetryCount int = 2 // Temporary hardcoded
+)
+
+type DownloadJob struct {
+	ID        int             `json:"id"`
+	Ctx       context.Context `json:"ctx"`
+	Link      string          `json:"link"`
+	Extension string          `json:"extension"`
+	Status    int8            `json:"status"`
+	Error     error           `json:"error"`
+}
+
 type DownloadService struct {
 	ctx          context.Context
 	downloadPath string
-	in           chan *models.DownloadJob
+	in           chan *DownloadJob
 	Wg           sync.WaitGroup
 	workersCount int
-	jobs         []*models.DownloadJob
+	jobs         []*DownloadJob
 	dl           *logger.DownloaderLogger
 	dow          *downloader.Downloader
 	con          *convertor.Convertor
 }
 
 func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, dow *downloader.Downloader, con *convertor.Convertor) *DownloadService {
-	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *models.DownloadJob), jobs: make([]*models.DownloadJob, 0), dl: dl, dow: dow, con: con}
+	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *DownloadJob), jobs: make([]*DownloadJob, 0), dl: dl, dow: dow, con: con}
 }
 
 func (s *DownloadService) CreateWorkers(amount int) {
@@ -36,14 +55,14 @@ func (s *DownloadService) CreateWorkers(amount int) {
 }
 
 func (s *DownloadService) Download(ctx context.Context, id int, link string, extension string) {
-	job := &models.DownloadJob{ID: id, Ctx: ctx, Link: link, Extension: extension, Status: models.JobStatusInProcess}
+	job := &DownloadJob{ID: id, Ctx: ctx, Link: link, Extension: extension, Status: JobStatusInProcess}
 
 	s.jobs = append(s.jobs, job)
 
 	s.in <- job
 }
 
-func (s *DownloadService) GetJobByID(id int) (job *models.DownloadJob, err error) {
+func (s *DownloadService) GetJobByID(id int) (job *DownloadJob, err error) {
 	for _, job := range s.jobs {
 		if job.ID == id {
 			return job, nil
@@ -57,7 +76,7 @@ func (s *DownloadService) ChangeDownloadPath(path string) {
 	s.downloadPath = path
 }
 
-func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *models.DownloadJob, id int) {
+func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *DownloadJob, id int) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -73,36 +92,57 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *model
 			if _, err := os.Stat(s.downloadPath); os.IsNotExist(err) {
 				err = os.MkdirAll(s.downloadPath, 0755)
 				if err != nil {
-					s.dl.LogError(fmt.Sprintf("worker %d error: folder creation error: %s", id, err.Error()))
-					job.Status = models.JobStatusError
+					s.dl.LogError(fmt.Sprintf("Worker %d error: folder creation error: %s", id, err.Error()))
+					job.Status = JobStatusError
 					job.Error = fmt.Errorf("folder creation error: %w", err)
 					continue
 				}
 			} else if err != nil {
-				s.dl.LogError(fmt.Sprintf("worker %d error: folder exist check error: %s", id, err.Error()))
-				job.Status = models.JobStatusError
+				s.dl.LogError(fmt.Sprintf("Worker %d error: folder exist check error: %s", id, err.Error()))
+				job.Status = JobStatusError
 				job.Error = fmt.Errorf("folder exist check error: %w", err)
 				continue
 			}
 
+			var fileName string
 			fileName, err := s.dow.Download(jobCtx, link, s.downloadPath)
 			if err != nil {
-				s.dl.LogError(fmt.Sprintf("worker %d error: downloader error: %s", id, err.Error()))
-				job.Status = models.JobStatusError
-				job.Error = err
-				continue
+				s.dl.LogError(fmt.Sprintf("Worker %d error: downloader error: %s", id, err.Error()))
+				if errors.Is(err, models.ErrDownloadCommandRunError) {
+					s.dl.LogInfo(fmt.Sprintf("Worker %d: Retrying", id))
+					job.Status = JobStatusRetrying
+					isDownloaded := false
+					for i := 0; i < RetryCount; i++ {
+						fileName, err = s.dow.Download(jobCtx, link, s.downloadPath)
+						if err != nil {
+							s.dl.LogError(fmt.Sprintf("Worker %d error (Retry %d): downloader error: %s", id, i+1, err.Error()))
+						} else {
+							isDownloaded = true
+							break
+						}
+					}
+					if !isDownloaded {
+						job.Status = JobStatusError
+						job.Error = err
+						continue
+					}
+				} else {
+					job.Status = JobStatusError
+					job.Error = err
+					continue
+				}
 			}
 
 			if err := s.con.Convert(jobCtx, s.downloadPath, fileName, extension); err != nil {
-				s.dl.LogError(fmt.Sprintf("worker %d error: convertor error: %s", id, err.Error()))
-				job.Status = models.JobStatusError
+				s.dl.LogError(fmt.Sprintf("Worker %d error: convertor error: %s", id, err.Error()))
+				job.Status = JobStatusError
 				job.Error = err
 				continue
 			}
 
-			job.Status = models.JobStatusComplete
+			job.Status = JobStatusComplete
 
-			s.dl.LogInfo(fmt.Sprintf("Video(%s) succesfully downloaded to %s", link, s.downloadPath))
+			s.dl.LogInfo(fmt.Sprintf("Worker %d: video(%s) succesfully downloaded to %s", id, link, s.downloadPath))
 		}
 	}
 }

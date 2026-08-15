@@ -77,7 +77,7 @@ func (d *Downloader) Download(ctx context.Context, link string, downloadPath str
 	setPlatformSysProcAttr(downloadCmd)
 
 	if err := downloadCmd.Run(); err != nil {
-		return "", fmt.Errorf("download command run error: %w", err)
+		return "", fmt.Errorf("%w: %w", models.ErrDownloadCommandRunError, err)
 	}
 
 	return fileName, nil

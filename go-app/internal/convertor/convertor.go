@@ -55,11 +55,11 @@ func (c *Convertor) Convert(ctx context.Context, dir string, fileName string, ex
 	setPlatformSysProcAttr(cmd)
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("convert command run error: %w", err)
+		return fmt.Errorf("%w: %w", models.ErrConvertCommandRunError, err)
 	}
 
 	if err := os.Remove(fmt.Sprintf("%s/%s", dir, fileName)); err != nil {
-		return fmt.Errorf("delete command run error: %w", err)
+		return fmt.Errorf("%w: %w", models.ErrDeleteCommandRunError, err)
 	}
 
 	return nil
