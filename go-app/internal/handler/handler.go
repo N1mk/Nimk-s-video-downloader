@@ -92,7 +92,7 @@ func (h *ExtensionHandler) PostConfig(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Config writing error", http.StatusInternalServerError)
 	}
 
-	var config models.Config
+	var config config_reader.Config
 	if err := json.Unmarshal(data, &config); err != nil {
 		h.dl.LogError("Bad input")
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)

@@ -43,42 +43,23 @@ func (c *Convertor) UpdatePath() error {
 	return nil
 }
 
-func (c *Convertor) Convert(ctx context.Context, dirPath string, neededExt string) error {
-	if neededExt == "webm" {
+func (c *Convertor) Convert(ctx context.Context, dir string, fileName string, extension string) error {
+	if extension == "webm" {
 		return nil
 	}
 
-	files, err := os.ReadDir(dirPath)
-	if err != nil {
-		return fmt.Errorf("directory read error: %w", err)
+	newFileName := strings.TrimSuffix(fileName, filepath.Ext(fileName)) + "." + extension
+
+	cmd := exec.CommandContext(ctx, c.ffmpegPath, "-i", fileName, newFileName)
+	cmd.Dir = dir
+	setPlatformSysProcAttr(cmd)
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("convert command run error: %w", err)
 	}
 
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-
-		currentName := file.Name()
-		currentExt := strings.ToLower(filepath.Ext(currentName))
-
-		if currentExt == ".mp4" || currentExt == ".mov" || currentExt == ".mp3" || currentExt == ".aac" || currentExt == ".wav" || currentExt == "" {
-			continue
-		}
-
-		outName := strings.TrimSuffix(currentName, filepath.Ext(currentName)) + "." + neededExt
-
-		cmd := exec.CommandContext(ctx, c.ffmpegPath, "-i", currentName, outName)
-		cmd.Dir = dirPath
-
-		setPlatformSysProcAttr(cmd)
-
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("convert command run error: %w", err)
-		}
-
-		if err := os.Remove(fmt.Sprintf("%s/%s", dirPath, currentName)); err != nil {
-			return fmt.Errorf("delete command run error: %w", err)
-		}
+	if err := os.Remove(fmt.Sprintf("%s/%s", dir, fileName)); err != nil {
+		return fmt.Errorf("delete command run error: %w", err)
 	}
 
 	return nil

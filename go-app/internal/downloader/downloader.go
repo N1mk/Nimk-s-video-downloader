@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"nvd/internal/models"
@@ -8,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 type Downloader struct {
@@ -57,16 +59,26 @@ func (d *Downloader) Update(ctx context.Context) error {
 	return nil
 }
 
-func (d *Downloader) Download(ctx context.Context, link string, downloadPath string) error {
-	cmd := exec.CommandContext(ctx, d.ytdlpPath, link)
-	cmd.Dir = downloadPath
+func (d *Downloader) Download(ctx context.Context, link string, downloadPath string) (fileName string, err error) {
+	nameCmd := exec.CommandContext(ctx, d.ytdlpPath, "--get-filename", "-o", "%(title)s.%(ext)s", link)
+	setPlatformSysProcAttr(nameCmd)
 
-	setPlatformSysProcAttr(cmd)
+	var out bytes.Buffer
+	nameCmd.Stdout = &out
 
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("download command run error: %w", err)
+	if err := nameCmd.Run(); err != nil {
+		return "", fmt.Errorf("get filename command run error: %w", err)
 	}
 
-	return nil
+	fileName = strings.TrimSpace(out.String())
+
+	downloadCmd := exec.CommandContext(ctx, d.ytdlpPath, "-o", "%(title)s.%(ext)s", link)
+	downloadCmd.Dir = downloadPath
+	setPlatformSysProcAttr(downloadCmd)
+
+	if err := downloadCmd.Run(); err != nil {
+		return "", fmt.Errorf("download command run error: %w", err)
+	}
+
+	return fileName, nil
 }

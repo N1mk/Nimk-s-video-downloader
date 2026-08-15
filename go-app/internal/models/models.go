@@ -28,7 +28,3 @@ type DownloadJob struct {
 	Status    string          `json:"status"`
 	Error     error           `json:"error"`
 }
-
-type Config struct {
-	DownloadPath string `json:"download_path"`
-}

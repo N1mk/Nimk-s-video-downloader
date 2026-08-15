@@ -76,23 +76,28 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *model
 					s.dl.LogError(fmt.Sprintf("worker %d error: folder creation error: %s", id, err.Error()))
 					job.Status = models.JobStatusError
 					job.Error = fmt.Errorf("folder creation error: %w", err)
+					continue
 				}
 			} else if err != nil {
 				s.dl.LogError(fmt.Sprintf("worker %d error: folder exist check error: %s", id, err.Error()))
 				job.Status = models.JobStatusError
 				job.Error = fmt.Errorf("folder exist check error: %w", err)
+				continue
 			}
 
-			if err := s.dow.Download(jobCtx, link, s.downloadPath); err != nil {
+			fileName, err := s.dow.Download(jobCtx, link, s.downloadPath)
+			if err != nil {
 				s.dl.LogError(fmt.Sprintf("worker %d error: downloader error: %s", id, err.Error()))
 				job.Status = models.JobStatusError
 				job.Error = err
+				continue
 			}
 
-			if err := s.con.Convert(jobCtx, s.downloadPath, extension); err != nil {
+			if err := s.con.Convert(jobCtx, s.downloadPath, fileName, extension); err != nil {
 				s.dl.LogError(fmt.Sprintf("worker %d error: convertor error: %s", id, err.Error()))
 				job.Status = models.JobStatusError
 				job.Error = err
+				continue
 			}
 
 			job.Status = models.JobStatusComplete

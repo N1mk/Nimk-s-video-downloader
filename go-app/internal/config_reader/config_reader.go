@@ -3,10 +3,13 @@ package config_reader
 import (
 	"encoding/json"
 	"fmt"
-	"nvd/internal/models"
 	"os"
 	"path/filepath"
 )
+
+type Config struct {
+	DownloadPath string `json:"download_path"`
+}
 
 type ConfigReader struct {
 	configPath string
@@ -19,13 +22,13 @@ func NewConfigReader(exePath string) *ConfigReader {
 	return &ConfigReader{configPath: configPath}
 }
 
-func (cr *ConfigReader) GetConfig() (*models.Config, error) {
+func (cr *ConfigReader) GetConfig() (*Config, error) {
 	data, err := os.ReadFile(cr.configPath)
 	if err != nil {
 		return nil, fmt.Errorf("config file reading error: %w", err)
 	}
 
-	var config models.Config
+	var config Config
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("config unmarshalling error: %w", err)
 	}
@@ -33,7 +36,7 @@ func (cr *ConfigReader) GetConfig() (*models.Config, error) {
 	return &config, nil
 }
 
-func (cr *ConfigReader) SetConfig(config *models.Config) error {
+func (cr *ConfigReader) SetConfig(config *Config) error {
 	data, err := json.Marshal(config)
 	if err != nil {
 		return fmt.Errorf("config marshalling error: %w", err)
