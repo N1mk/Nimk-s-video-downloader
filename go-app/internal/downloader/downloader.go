@@ -60,7 +60,7 @@ func (d *Downloader) Update(ctx context.Context) error {
 }
 
 func (d *Downloader) Download(ctx context.Context, link string, downloadPath string) (fileName string, err error) {
-	nameCmd := exec.CommandContext(ctx, d.ytdlpPath, "--get-filename", "-o", "%(title)s.%(ext)s", link)
+	nameCmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--get-filename", "-o", "%(title)s.%(ext)s", link)
 	setPlatformSysProcAttr(nameCmd)
 
 	var out bytes.Buffer
@@ -72,7 +72,7 @@ func (d *Downloader) Download(ctx context.Context, link string, downloadPath str
 
 	fileName = strings.TrimSpace(out.String())
 
-	downloadCmd := exec.CommandContext(ctx, d.ytdlpPath, "-o", "%(title)s.%(ext)s", link)
+	downloadCmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "-o", "%(title)s.%(ext)s", link)
 	downloadCmd.Dir = downloadPath
 	setPlatformSysProcAttr(downloadCmd)
 
