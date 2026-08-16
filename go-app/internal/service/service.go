@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"nvd/internal/config"
 	"nvd/internal/convertor"
 	"nvd/internal/downloader"
 	"nvd/internal/logger"
@@ -17,8 +18,6 @@ const (
 	JobStatusError     int8 = 1
 	JobStatusRetrying  int8 = 2
 	JobStatusComplete  int8 = 3
-
-	RetryCount int = 2 // Temporary hardcoded
 )
 
 type DownloadJob struct {
@@ -31,19 +30,20 @@ type DownloadJob struct {
 }
 
 type DownloadService struct {
-	ctx          context.Context
-	downloadPath string
-	in           chan *DownloadJob
-	Wg           sync.WaitGroup
-	workersCount int
-	jobs         []*DownloadJob
-	dl           *logger.DownloaderLogger
-	dow          *downloader.Downloader
-	con          *convertor.Convertor
+	ctx           context.Context
+	downloadPath  string
+	in            chan *DownloadJob
+	Wg            sync.WaitGroup
+	workersCount  int
+	jobs          []*DownloadJob
+	dl            *logger.DownloaderLogger
+	dow           *downloader.Downloader
+	con           *convertor.Convertor
+	maxRetryCount int
 }
 
-func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, dow *downloader.Downloader, con *convertor.Convertor) *DownloadService {
-	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *DownloadJob), jobs: make([]*DownloadJob, 0), dl: dl, dow: dow, con: con}
+func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, dow *downloader.Downloader, con *convertor.Convertor, maxRetryCount int) *DownloadService {
+	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *DownloadJob), jobs: make([]*DownloadJob, 0), dl: dl, dow: dow, con: con, maxRetryCount: maxRetryCount}
 }
 
 func (s *DownloadService) CreateWorkers(amount int) {
@@ -72,8 +72,9 @@ func (s *DownloadService) GetJobByID(id int) (job *DownloadJob, err error) {
 	return nil, models.ErrNotFound
 }
 
-func (s *DownloadService) ChangeDownloadPath(path string) {
-	s.downloadPath = path
+func (s *DownloadService) ChangeConfiguration(config *config.Config) {
+	s.downloadPath = config.DownloadPath
+	s.maxRetryCount = config.MaxRetryCount
 }
 
 func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *DownloadJob, id int) {
@@ -112,7 +113,7 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 					s.dl.LogInfo(fmt.Sprintf("Worker %d: Retrying", id))
 					job.Status = JobStatusRetrying
 					isDownloaded := false
-					for i := 0; i < RetryCount; i++ {
+					for i := 0; i < s.maxRetryCount; i++ {
 						fileName, err = s.dow.Download(jobCtx, link, s.downloadPath)
 						if err != nil {
 							s.dl.LogError(fmt.Sprintf("Worker %d error (Retry %d): downloader error: %s", id, i+1, err.Error()))

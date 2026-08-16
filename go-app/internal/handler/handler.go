@@ -7,22 +7,23 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"nvd/internal/config_reader"
+	"nvd/internal/config"
 	"nvd/internal/downloader"
 	"nvd/internal/logger"
 	"nvd/internal/models"
 	"nvd/internal/service"
+	"strconv"
 )
 
 type ExtensionHandler struct {
 	ctx context.Context
 	svc *service.DownloadService
 	dl  *logger.DownloaderLogger
-	cr  *config_reader.ConfigReader
+	cr  *config.ConfigReader
 	dow *downloader.Downloader
 }
 
-func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *logger.DownloaderLogger, cr *config_reader.ConfigReader, dow *downloader.Downloader) *ExtensionHandler {
+func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *logger.DownloaderLogger, cr *config.ConfigReader, dow *downloader.Downloader) *ExtensionHandler {
 	return &ExtensionHandler{ctx: ctx, svc: svc, dl: dl, cr: cr, dow: dow}
 }
 
@@ -53,6 +54,7 @@ func (h *ExtensionHandler) PostJobStatusRequest(w http.ResponseWriter, r *http.R
 	if errors.Is(err, models.ErrNotFound) {
 		h.dl.LogError("Job not found")
 		http.Error(w, "Job not found", http.StatusNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -71,6 +73,7 @@ func (h *ExtensionHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.dl.LogError(fmt.Sprintf("Config reader error: %s", err.Error()))
 		http.Error(w, "Config reading error", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -85,20 +88,39 @@ func (h *ExtensionHandler) PostConfig(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.dl.LogError("Bad input")
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
 	}
 
-	if err := h.cr.SetConfigJSON(data); err != nil {
-		h.dl.LogError(fmt.Sprintf("Config reader error: %s", err.Error()))
-		http.Error(w, "Config writing error", http.StatusInternalServerError)
+	currentConfig, err := h.cr.GetConfig()
+	if err != nil {
+		h.dl.LogError(fmt.Sprintf("Getting config error: %s", err.Error()))
+		http.Error(w, fmt.Sprintf("Getting config error: %s", err.Error()), http.StatusInternalServerError)
+		return
 	}
 
-	var config config_reader.Config
-	if err := json.Unmarshal(data, &config); err != nil {
+	var rawConfig config.RawConfig
+	if err := json.Unmarshal(data, &rawConfig); err != nil {
+		h.dl.LogError(fmt.Sprintf("Config unmarshalling error: %s", err.Error()))
+		http.Error(w, fmt.Sprintf("Config unmarshalling error: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	maxRetryCount, err := strconv.Atoi(rawConfig.MaxRetryCount)
+	if err != nil {
 		h.dl.LogError("Bad input")
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
 	}
 
-	h.svc.ChangeDownloadPath(config.DownloadPath)
+	newConfig := config.Config{DownloadPath: rawConfig.DownloadPath, MaxRetryCount: maxRetryCount, AddToAutostart: currentConfig.AddToAutostart}
+
+	if err := h.cr.SetConfig(&newConfig); err != nil {
+		h.dl.LogError(fmt.Sprintf("Config reader error: %s", err.Error()))
+		http.Error(w, "Config writing error", http.StatusInternalServerError)
+		return
+	}
+
+	h.svc.ChangeConfiguration(&newConfig)
 }
 
 func (h *ExtensionHandler) PostLogs(w http.ResponseWriter, r *http.Request) {

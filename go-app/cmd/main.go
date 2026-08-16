@@ -7,7 +7,7 @@ import (
 
 	"net/http"
 	"nvd/internal/autostarter"
-	"nvd/internal/config_reader"
+	"nvd/internal/config"
 	"nvd/internal/convertor"
 	"nvd/internal/deps_downloader"
 	"nvd/internal/downloader"
@@ -37,6 +37,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	cr := config.NewConfigReader(exePath)
+	config, err := cr.GetConfig()
+	if err != nil {
+		dl.LogFatal(fmt.Sprintf("Config reader error: %s", err.Error()))
+		os.Exit(1)
+	}
+
 	depsDowCtx, closeDepsCtx := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer closeDepsCtx()
 
@@ -46,14 +53,16 @@ func main() {
 	}
 	dl.LogInfo("All dependencies are installed!")
 
-	if ok, err := autostarter.AddToAutostart(dl); !ok {
-		if err != nil {
-			dl.LogFatal(fmt.Sprintf("Add to autostart error: %s", err.Error()))
-			os.Exit(1)
+	if config.AddToAutostart {
+		if ok, err := autostarter.AddToAutostart(dl); !ok {
+			if err != nil {
+				dl.LogFatal(fmt.Sprintf("Add to autostart error: %s", err.Error()))
+				os.Exit(1)
+			}
+			dl.LogInfo("Program was in autostart")
+		} else {
+			dl.LogInfo("Program added to autostart")
 		}
-		dl.LogInfo("Program was in autostart")
-	} else {
-		dl.LogInfo("Program added to autostart")
 	}
 
 	dow := downloader.NewDownloader()
@@ -69,17 +78,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	cr := config_reader.NewConfigReader(exePath)
-	config, err := cr.GetConfig()
-	if err != nil {
-		dl.LogFatal(fmt.Sprintf("Config reader error: %s", err.Error()))
-		os.Exit(1)
-	}
-
 	ctx, close := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer close()
 
-	svc := service.NewDownloadService(ctx, config.DownloadPath, dl, dow, con)
+	svc := service.NewDownloadService(ctx, config.DownloadPath, dl, dow, con, config.MaxRetryCount)
 
 	svc.CreateWorkers(5)
 

@@ -1,5 +1,6 @@
 const statusDiv = document.getElementById('status');
-const pathInput = document.getElementById('downloadPathInput');
+const downloadPathInput = document.getElementById('downloadPathInput');
+const maxRetryCountInput = document.getElementById('maxRetryCountInput')
 let statusIntervalId = null;
 
 const jobStatusInProcess = 0
@@ -28,7 +29,8 @@ function loadConfig() {
   chrome.runtime.sendMessage({ action: 'fetchGet', path: '/config' }, response => {
     if (response && response.success) {
       if (response.data && response.data.download_path !== undefined) {
-        pathInput.value = response.data.download_path;
+        downloadPathInput.value = response.data.download_path;
+        maxRetryCountInput.value = response.data.max_retry_count;
       }
     } else {
       statusDiv.innerText = 'Warning: Cannot connect to the application';
@@ -47,7 +49,7 @@ document.getElementById('saveConfigBtn').addEventListener('click', () => {
   chrome.runtime.sendMessage({ 
     action: 'fetchPost', 
     path: '/config', 
-    body: { download_path: pathInput.value } 
+    body: { download_path: downloadPathInput.value, max_retry_count: maxRetryCountInput.value } 
   }, response => {
     if (response && response.success) {
       statusDiv.innerText = 'Configuration successfully saved!';

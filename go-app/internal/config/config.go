@@ -1,4 +1,4 @@
-package config_reader
+package config
 
 import (
 	"encoding/json"
@@ -7,8 +7,16 @@ import (
 	"path/filepath"
 )
 
+type RawConfig struct {
+	DownloadPath   string `json:"download_path"`
+	MaxRetryCount  string `json:"max_retry_count"`
+	AddToAutostart string `json:"add_to_autostart"`
+}
+
 type Config struct {
-	DownloadPath string `json:"download_path"`
+	DownloadPath   string `json:"download_path"`
+	MaxRetryCount  int    `json:"max_retry_count"`
+	AddToAutostart bool   `json:"add_to_autostart"`
 }
 
 type ConfigReader struct {
