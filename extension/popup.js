@@ -7,6 +7,7 @@ const jobStatusInProcess = 0
 const jobStatusError     = 1
 const jobStatusRetrying  = 2
 const jobStatusComplete  = 3
+const jobStatusAlreadyExists = 4
 const selectEl = document.getElementById('formatSelect');
 const wrapperEl = document.getElementById('selectWrapper');
 
@@ -165,11 +166,15 @@ function startStatusPolling(id) {
         if (data.status === jobStatusInProcess) {
           statusDiv.innerText = `Video downloading... (ID: ${id})`;
         } else if (data.status === jobStatusError) {
-          statusDiv.innerText = `Error: ${data.error || 'unknown error while downloading'}`;
+          statusDiv.innerText = `Error`;
           clearInterval(statusIntervalId);
         } else if (data.status === jobStatusComplete) {
           statusDiv.innerText = 'Download complete!';
           clearInterval(statusIntervalId);
+        } else if (data.status === jobStatusRetrying) {
+          statusDiv.innerText = 'Error. Retrying';
+        } else if (data.status === jobStatusAlreadyExists) {
+          statusDiv.innerText = 'Video file already exists!'
         }
       }
     });

@@ -59,26 +59,28 @@ func (d *Downloader) Update(ctx context.Context) error {
 	return nil
 }
 
-func (d *Downloader) Download(ctx context.Context, link string, downloadPath string) (fileName string, err error) {
-	nameCmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--get-filename", "-o", "%(title)s.%(ext)s", link)
-	setPlatformSysProcAttr(nameCmd)
+func (d *Downloader) GetFileName(ctx context.Context, link string) (fileName string, err error) {
+	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--get-filename", "-o", "%(title)s.%(ext)s", link)
+	setPlatformSysProcAttr(cmd)
 
 	var out bytes.Buffer
-	nameCmd.Stdout = &out
+	cmd.Stdout = &out
 
-	if err := nameCmd.Run(); err != nil {
+	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("%w: %w", models.ErrGetFilenameCommandRunError, err)
 	}
 
-	fileName = strings.TrimSpace(out.String())
+	return strings.TrimSpace(out.String()), nil
+}
 
-	downloadCmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "-o", "%(title)s.%(ext)s", link)
-	downloadCmd.Dir = downloadPath
-	setPlatformSysProcAttr(downloadCmd)
+func (d *Downloader) Download(ctx context.Context, link string, downloadPath string) (err error) {
+	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "-o", "%(title)s.%(ext)s", link)
+	cmd.Dir = downloadPath
+	setPlatformSysProcAttr(cmd)
 
-	if err := downloadCmd.Run(); err != nil {
-		return "", fmt.Errorf("%w: %w", models.ErrDownloadCommandRunError, err)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%w: %w", models.ErrDownloadCommandRunError, err)
 	}
 
-	return fileName, nil
+	return nil
 }

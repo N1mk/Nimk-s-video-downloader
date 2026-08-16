@@ -10,14 +10,17 @@ import (
 	"nvd/internal/logger"
 	"nvd/internal/models"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 )
 
 const (
-	JobStatusInProcess int8 = 0
-	JobStatusError     int8 = 1
-	JobStatusRetrying  int8 = 2
-	JobStatusComplete  int8 = 3
+	JobStatusInProcess     int8 = 0
+	JobStatusError         int8 = 1
+	JobStatusRetrying      int8 = 2
+	JobStatusComplete      int8 = 3
+	JobStatusAlreadyExists int8 = 4
 )
 
 type DownloadJob struct {
@@ -105,8 +108,23 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 				continue
 			}
 
-			var fileName string
-			fileName, err := s.dow.Download(jobCtx, link, s.downloadPath)
+			fileName, err1 := s.dow.GetFileName(jobCtx, link)
+
+			pathToFile := strings.TrimSuffix(filepath.Join(s.downloadPath, fileName), filepath.Ext(fileName)) + "." + extension
+
+			_, err := os.Stat(pathToFile)
+			if err == nil {
+				job.Status = JobStatusAlreadyExists
+				continue
+			}
+			err = nil
+
+			err2 := s.dow.Download(ctx, link, s.downloadPath)
+			if err1 != nil {
+				err = err2
+			} else if err2 != nil {
+				err = err2
+			}
 			if err != nil {
 				s.dl.LogError(fmt.Sprintf("Worker %d error: downloader error: %s", id, err.Error()))
 				if errors.Is(err, models.ErrDownloadCommandRunError) || errors.Is(err, models.ErrGetFilenameCommandRunError) {
@@ -114,7 +132,14 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 					job.Status = JobStatusRetrying
 					isDownloaded := false
 					for i := 0; i < s.maxRetryCount; i++ {
-						fileName, err = s.dow.Download(jobCtx, link, s.downloadPath)
+						fileName, err1 = s.dow.GetFileName(jobCtx, link)
+						err2 := s.dow.Download(ctx, link, s.downloadPath)
+						var err error
+						if err1 != nil {
+							err = err2
+						} else if err2 != nil {
+							err = err2
+						}
 						if err != nil {
 							s.dl.LogError(fmt.Sprintf("Worker %d error (Retry %d): downloader error: %s", id, i+1, err.Error()))
 							if !errors.Is(err, models.ErrDownloadCommandRunError) && !errors.Is(err, models.ErrGetFilenameCommandRunError) {
