@@ -2,8 +2,13 @@ const statusDiv = document.getElementById('status');
 const pathInput = document.getElementById('downloadPathInput');
 let statusIntervalId = null;
 
+const jobStatusInProcess = 0
+const jobStatusError     = 1
+const jobStatusRetrying  = 2
+const jobStatusComplete  = 3
 const selectEl = document.getElementById('formatSelect');
 const wrapperEl = document.getElementById('selectWrapper');
+
 
 if (selectEl && wrapperEl) {
   selectEl.addEventListener('focus', () => {
@@ -155,12 +160,12 @@ function startStatusPolling(id) {
       if (response && response.success && response.data) {
         const data = response.data;
         
-        if (data.status === 'in process') {
+        if (data.status === jobStatusInProcess) {
           statusDiv.innerText = `Video downloading... (ID: ${id})`;
-        } else if (data.status === 'error') {
+        } else if (data.status === jobStatusError) {
           statusDiv.innerText = `Error: ${data.error || 'unknown error while downloading'}`;
           clearInterval(statusIntervalId);
-        } else if (data.status === 'complete') {
+        } else if (data.status === jobStatusComplete) {
           statusDiv.innerText = 'Download complete!';
           clearInterval(statusIntervalId);
         }
