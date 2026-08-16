@@ -26,6 +26,7 @@ func InitDownloaderLogger(filePath string) (*DownloaderLogger, error) {
 
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
+		os.Create(filePath)
 		slog.Error("Cannot open log file")
 		return nil, err
 	}

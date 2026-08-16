@@ -20,5 +20,6 @@ require (
 	github.com/olekukonko/ll v0.1.6 // indirect
 	github.com/olekukonko/tablewriter v1.1.4 // indirect
 	github.com/parsiya/golnk v0.0.0-20260401090434-89c3c681a14a // indirect
+	github.com/ulikunitz/xz v0.5.16 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 )
