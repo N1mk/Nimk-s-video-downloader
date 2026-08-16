@@ -13,9 +13,3 @@ var (
 	ErrDeleteCommandRunError      error = errors.New("delete command run error")
 	ErrGetFilenameCommandRunError error = errors.New("get filename command run error")
 )
-
-type ExtensionRequestData struct {
-	ID        int    `json:"id"`
-	URL       string `json:"url"`
-	Extension string `json:"extension"`
-}

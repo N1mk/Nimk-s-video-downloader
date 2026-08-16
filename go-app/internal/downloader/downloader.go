@@ -73,8 +73,10 @@ func (d *Downloader) GetFileName(ctx context.Context, link string) (fileName str
 	return strings.TrimSpace(out.String()), nil
 }
 
-func (d *Downloader) Download(ctx context.Context, link string, downloadPath string) (err error) {
-	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "-o", "%(title)s.%(ext)s", link)
+func (d *Downloader) Download(ctx context.Context, link string, downloadPath string, quality string) (err error) {
+	fmt.Println(quality) // delete
+
+	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s]+ba/b", quality), link)
 	cmd.Dir = downloadPath
 	setPlatformSysProcAttr(cmd)
 

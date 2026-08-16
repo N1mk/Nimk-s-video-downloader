@@ -15,6 +15,13 @@ import (
 	"strconv"
 )
 
+type ExtensionRequest struct {
+	ID        int    `json:"id"`
+	URL       string `json:"url"`
+	Extension string `json:"extension"`
+	Quality   string `json:"quality"`
+}
+
 type ExtensionHandler struct {
 	ctx context.Context
 	svc *service.DownloadService
@@ -30,20 +37,20 @@ func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *
 func (h *ExtensionHandler) PostDownload(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var data models.ExtensionRequestData
+	var data ExtensionRequest
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		h.dl.LogError("Bad input")
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	h.svc.Download(h.ctx, data.ID, data.URL, data.Extension)
+	h.svc.Download(h.ctx, data.ID, data.URL, data.Extension, data.Quality)
 }
 
 func (h *ExtensionHandler) PostJobStatusRequest(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var data models.ExtensionRequestData
+	var data ExtensionRequest
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		h.dl.LogError("Bad input")
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)

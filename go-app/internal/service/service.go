@@ -28,6 +28,7 @@ type DownloadJob struct {
 	Ctx       context.Context `json:"ctx"`
 	Link      string          `json:"link"`
 	Extension string          `json:"extension"`
+	Quality   string          `json:"quality"`
 	Status    int8            `json:"status"`
 	Error     error           `json:"error"`
 }
@@ -57,8 +58,10 @@ func (s *DownloadService) CreateWorkers(amount int) {
 	}
 }
 
-func (s *DownloadService) Download(ctx context.Context, id int, link string, extension string) {
-	job := &DownloadJob{ID: id, Ctx: ctx, Link: link, Extension: extension, Status: JobStatusInProcess}
+func (s *DownloadService) Download(ctx context.Context, id int, link string, extension string, quality string) {
+	fmt.Println(extension) //delete
+
+	job := &DownloadJob{ID: id, Ctx: ctx, Link: link, Extension: extension, Quality: quality, Status: JobStatusInProcess}
 
 	s.jobs = append(s.jobs, job)
 
@@ -90,6 +93,7 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 			jobCtx := job.Ctx
 			link := job.Link
 			extension := job.Extension
+			quality := job.Quality
 
 			s.dl.LogInfo(fmt.Sprintf("Started downloading video(%s) to %s", link, s.downloadPath))
 
@@ -119,7 +123,7 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 			}
 			err = nil
 
-			err2 := s.dow.Download(ctx, link, s.downloadPath)
+			err2 := s.dow.Download(ctx, link, s.downloadPath, quality)
 			if err1 != nil {
 				err = err2
 			} else if err2 != nil {
@@ -133,7 +137,7 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 					isDownloaded := false
 					for i := 0; i < s.maxRetryCount; i++ {
 						fileName, err1 = s.dow.GetFileName(jobCtx, link)
-						err2 := s.dow.Download(ctx, link, s.downloadPath)
+						err2 := s.dow.Download(ctx, link, s.downloadPath, quality)
 						var err error
 						if err1 != nil {
 							err = err2

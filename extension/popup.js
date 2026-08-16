@@ -84,7 +84,9 @@ document.getElementById('updateLoaderBtn').addEventListener('click', () => {
 
 document.getElementById('sendBtn').addEventListener('click', async () => {
   const formatSelect = document.getElementById('formatSelect');
+  const qualitySelect = document.getElementById('qualitySelect');
   const selectedExtension = formatSelect.value;
+  const selectedQuality = qualitySelect.value;
 
   statusDiv.innerText = 'Checking the tab...';
   
@@ -131,7 +133,7 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
   chrome.runtime.sendMessage({
     action: 'fetchPost',
     path: '/download',
-    body: { url: cleanUrl, extension: selectedExtension, id: randomId }
+    body: { url: cleanUrl, extension: selectedExtension, quality: selectedQuality, id: randomId }
   }, response => {
     if (response && response.success) {
       statusDiv.innerText = `Download started!`;
@@ -164,7 +166,7 @@ function startStatusPolling(id) {
         const data = response.data;
         
         if (data.status === jobStatusInProcess) {
-          statusDiv.innerText = `Video downloading... (ID: ${id})`;
+          statusDiv.innerText = `Video downloading...`;
         } else if (data.status === jobStatusError) {
           statusDiv.innerText = `Error`;
           clearInterval(statusIntervalId);
@@ -178,5 +180,5 @@ function startStatusPolling(id) {
         }
       }
     });
-  }, 10000);
+  }, 5000);
 }
