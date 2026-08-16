@@ -108,7 +108,7 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 			fileName, err := s.dow.Download(jobCtx, link, s.downloadPath)
 			if err != nil {
 				s.dl.LogError(fmt.Sprintf("Worker %d error: downloader error: %s", id, err.Error()))
-				if errors.Is(err, models.ErrDownloadCommandRunError) {
+				if errors.Is(err, models.ErrDownloadCommandRunError) || errors.Is(err, models.ErrGetFilenameCommandRunError) {
 					s.dl.LogInfo(fmt.Sprintf("Worker %d: Retrying", id))
 					job.Status = JobStatusRetrying
 					isDownloaded := false
@@ -116,6 +116,10 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 						fileName, err = s.dow.Download(jobCtx, link, s.downloadPath)
 						if err != nil {
 							s.dl.LogError(fmt.Sprintf("Worker %d error (Retry %d): downloader error: %s", id, i+1, err.Error()))
+							if !errors.Is(err, models.ErrDownloadCommandRunError) && !errors.Is(err, models.ErrGetFilenameCommandRunError) {
+								s.dl.LogInfo(fmt.Sprintf("Worker %d: stop retrying", id))
+								break
+							}
 						} else {
 							isDownloaded = true
 							break

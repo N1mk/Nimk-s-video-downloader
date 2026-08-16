@@ -67,7 +67,7 @@ func (d *Downloader) Download(ctx context.Context, link string, downloadPath str
 	nameCmd.Stdout = &out
 
 	if err := nameCmd.Run(); err != nil {
-		return "", fmt.Errorf("get filename command run error: %w", err)
+		return "", fmt.Errorf("%w: %w", models.ErrGetFilenameCommandRunError, err)
 	}
 
 	fileName = strings.TrimSpace(out.String())
