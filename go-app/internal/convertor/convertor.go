@@ -18,26 +18,24 @@ func NewConvertor() *Convertor {
 	return &Convertor{}
 }
 
-func (c *Convertor) Convert(ctx context.Context, dir string, fileName string, extension string) error {
+func (c *Convertor) Convert(ctx context.Context, dir string, fileName string, extension string) (newFileName string, err error) {
 	if filepath.Ext(fileName) == extension {
-		pathToFile := filepath.Join(dir, fileName)
-		os.Rename(pathToFile, strings.TrimSuffix(pathToFile, filepath.Ext(pathToFile))+"(downloaded)."+extension)
-		return nil
+		return fileName, nil
 	}
 
-	newFileName := strings.TrimSuffix(fileName, filepath.Ext(fileName)) + "." + extension
+	newFileName = strings.TrimSuffix(fileName, filepath.Ext(fileName)) + "." + extension
 
 	cmd := exec.CommandContext(ctx, c.ffmpegPath, "-threads", "2", "-i", fileName, "-preset", "veryfast", newFileName)
 	cmd.Dir = dir
 	setPlatformSysProcAttr(cmd)
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%w: %w", project_errors.ErrConvertCommandRunError, err)
+		return "", fmt.Errorf("%w: %w", project_errors.ErrConvertCommandRunError, err)
 	}
 
 	if err := os.Remove(fmt.Sprintf("%s/%s", dir, fileName)); err != nil {
-		return fmt.Errorf("%w: %w", project_errors.ErrDeleteCommandRunError, err)
+		return "", fmt.Errorf("%w: %w", project_errors.ErrDeleteCommandRunError, err)
 	}
 
-	return nil
+	return newFileName, nil
 }

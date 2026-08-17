@@ -159,8 +159,17 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 				}
 			}
 
-			if err := s.con.Convert(job.Ctx, s.downloadPath, fileName, job.Extension); err != nil {
+			newFileName, err := s.con.Convert(job.Ctx, s.downloadPath, fileName, job.Extension)
+			if err != nil {
 				s.dl.LogError(fmt.Sprintf("Worker %d error: convert error: %s", id, err.Error()))
+				job.Status = JobStatusError
+				job.Error = err
+				continue
+			}
+
+			newPathToFile := filepath.Join(s.downloadPath, newFileName)
+			if err := os.Rename(newPathToFile, strings.TrimSuffix(newPathToFile, filepath.Ext(newFileName))+fmt.Sprintf("(%sp).%s", job.Quality, job.Extension)); err != nil {
+				s.dl.LogError(fmt.Sprintf("Worker %d error: rename error: %s", id, err.Error()))
 				job.Status = JobStatusError
 				job.Error = err
 				continue
