@@ -1,6 +1,6 @@
 //go:build windows
 
-package downloader
+package loader
 
 import (
 	"os"
@@ -11,7 +11,7 @@ import (
 
 const ytDlpName = "yt-dlp.exe"
 
-func (d *Downloader) UpdatePath() error {
+func (d *Loader) UpdatePath() error {
 
 	exePath, err := os.Executable()
 	if err != nil {

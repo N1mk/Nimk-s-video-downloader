@@ -4,27 +4,25 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"nvd/internal/models"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"time"
 )
 
+const logFileName = "app.log"
+
 type DownloaderLogger struct {
-	logger   *slog.Logger
-	filePath string
-	file     *os.File
+	logger *slog.Logger
+	file   *os.File
 }
 
-func InitDownloaderLogger(filePath string) (*DownloaderLogger, error) {
-	dl := &DownloaderLogger{filePath: filePath}
+func InitDownloaderLogger() (*DownloaderLogger, error) {
+	dl := &DownloaderLogger{}
 
 	dl.rotate()
 
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	file, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		slog.Error("Cannot open log file")
 		return nil, err
@@ -36,37 +34,6 @@ func InitDownloaderLogger(filePath string) (*DownloaderLogger, error) {
 	dl.LogInfo("App started!")
 
 	return dl, nil
-}
-
-func (l *DownloaderLogger) OpenLogFile() error {
-	exePath, err := os.Executable()
-	if err != nil {
-		return err
-	}
-	exeDir := filepath.Dir(exePath)
-	fullFilePath := filepath.Join(exeDir, l.filePath)
-
-	var cmd *exec.Cmd
-
-	switch runtime.GOOS {
-	case "windows":
-		cmd = exec.Command("notepad.exe", fullFilePath)
-	case "darwin":
-		cmd = exec.Command("open", fullFilePath)
-	case "linux":
-		cmd = exec.Command("xdg-open", fullFilePath)
-	default:
-		return models.ErrUnknownOS
-	}
-
-	setPlatformSysProcAttr(cmd)
-
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-
-	time.Sleep(5 * time.Second)
-	return nil
 }
 
 func (l *DownloaderLogger) rotate() error {

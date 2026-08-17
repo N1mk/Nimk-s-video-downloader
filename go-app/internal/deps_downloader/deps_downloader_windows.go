@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"nvd/internal/models"
+	"nvd/internal/project_errors"
 	"os"
 	"path/filepath"
 )
@@ -24,7 +24,7 @@ const (
 func installYtDlp(ctx context.Context, exeDir string) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ytDlpDownloadLink, nil)
 	if err != nil {
-		return models.ErrDeadlineExceeded
+		return project_errors.ErrDeadlineExceeded
 	}
 
 	resp, err := http.DefaultClient.Do(req)
@@ -52,7 +52,7 @@ func installYtDlp(ctx context.Context, exeDir string) error {
 func installFFmpeg(ctx context.Context, exeDir string) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ffmpegDownloadLink, nil)
 	if err != nil {
-		return models.ErrDeadlineExceeded
+		return project_errors.ErrDeadlineExceeded
 	}
 
 	resp, err := http.DefaultClient.Do(req)

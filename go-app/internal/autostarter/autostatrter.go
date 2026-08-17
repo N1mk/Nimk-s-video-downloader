@@ -2,7 +2,7 @@ package autostarter
 
 import (
 	"nvd/internal/logger"
-	"nvd/internal/models"
+	"nvd/internal/project_errors"
 	"runtime"
 )
 
@@ -15,6 +15,6 @@ func AddToAutostart(dl *logger.DownloaderLogger) (ok bool, err error) {
 	case "darwin":
 		return addToAutostartUnix(dl)
 	default:
-		return false, models.ErrUnknownOS
+		return false, project_errors.ErrUnknownOS
 	}
 }

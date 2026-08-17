@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"nvd/internal/config"
 	"nvd/internal/convertor"
-	"nvd/internal/downloader"
+	"nvd/internal/loader"
 	"nvd/internal/logger"
-	"nvd/internal/models"
+	"nvd/internal/project_errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,13 +41,13 @@ type DownloadService struct {
 	workersCount  int
 	jobs          []*DownloadJob
 	dl            *logger.DownloaderLogger
-	dow           *downloader.Downloader
+	loa           *loader.Loader
 	con           *convertor.Convertor
 	maxRetryCount int
 }
 
-func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, dow *downloader.Downloader, con *convertor.Convertor, maxRetryCount int) *DownloadService {
-	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *DownloadJob), jobs: make([]*DownloadJob, 0), dl: dl, dow: dow, con: con, maxRetryCount: maxRetryCount}
+func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, loa *loader.Loader, con *convertor.Convertor, maxRetryCount int) *DownloadService {
+	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *DownloadJob), jobs: make([]*DownloadJob, 0), dl: dl, loa: loa, con: con, maxRetryCount: maxRetryCount}
 }
 
 func (s *DownloadService) CreateWorkers(amount int) {
@@ -73,7 +73,7 @@ func (s *DownloadService) GetJobByID(id int) (job *DownloadJob, err error) {
 		}
 	}
 
-	return nil, models.ErrNotFound
+	return nil, project_errors.ErrNotFound
 }
 
 func (s *DownloadService) ChangeConfiguration(config *config.Config) {
@@ -110,7 +110,7 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 			fileName, ok, err := s.tryDownload(job)
 			if !ok {
 				retried := false
-				if errors.Is(err, models.ErrDownloadCommandRunError) || errors.Is(err, models.ErrGetFilenameCommandRunError) {
+				if errors.Is(err, project_errors.ErrDownloadCommandRunError) || errors.Is(err, project_errors.ErrGetFilenameCommandRunError) {
 					s.dl.LogError(fmt.Sprintf("Worker %d error: download error: %s", id, err.Error()))
 					s.dl.LogInfo(fmt.Sprintf("Worker %d: Retrying...", id))
 					job.Status = JobStatusRetrying
@@ -123,7 +123,7 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 						fileName, ok, err = s.tryDownload(job)
 						if !ok {
 							if err != nil {
-								if errors.Is(err, models.ErrDownloadCommandRunError) || errors.Is(err, models.ErrGetFilenameCommandRunError) {
+								if errors.Is(err, project_errors.ErrDownloadCommandRunError) || errors.Is(err, project_errors.ErrGetFilenameCommandRunError) {
 									s.dl.LogError(fmt.Sprintf("Worker %d error (Retry %d): download error: %s", id, i+1, err.Error()))
 								} else {
 									s.dl.LogError(fmt.Sprintf("Worker %d unknown error (Retry %d): download error: %s", id, i+1, err.Error()))
@@ -174,7 +174,7 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 }
 
 func (s *DownloadService) tryDownload(job *DownloadJob) (fileName string, ok bool, err error) {
-	fileName, err1 := s.dow.GetFileName(job.Ctx, job.Link)
+	fileName, err1 := s.loa.GetFileName(job.Ctx, job.Link)
 
 	oldExt := filepath.Ext(fileName)
 	pathToFile := strings.TrimSuffix(filepath.Join(s.downloadPath, fileName), oldExt) + "." + job.Extension
@@ -185,7 +185,7 @@ func (s *DownloadService) tryDownload(job *DownloadJob) (fileName string, ok boo
 	}
 	err = nil
 
-	err2 := s.dow.Download(job.Ctx, job.Link, s.downloadPath, job.Quality)
+	err2 := s.loa.Download(job.Ctx, job.Link, s.downloadPath, job.Quality)
 
 	if err1 != nil {
 		err = err2

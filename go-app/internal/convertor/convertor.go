@@ -3,7 +3,7 @@ package convertor
 import (
 	"context"
 	"fmt"
-	"nvd/internal/models"
+	"nvd/internal/project_errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,11 +32,11 @@ func (c *Convertor) Convert(ctx context.Context, dir string, fileName string, ex
 	setPlatformSysProcAttr(cmd)
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%w: %w", models.ErrConvertCommandRunError, err)
+		return fmt.Errorf("%w: %w", project_errors.ErrConvertCommandRunError, err)
 	}
 
 	if err := os.Remove(fmt.Sprintf("%s/%s", dir, fileName)); err != nil {
-		return fmt.Errorf("%w: %w", models.ErrDeleteCommandRunError, err)
+		return fmt.Errorf("%w: %w", project_errors.ErrDeleteCommandRunError, err)
 	}
 
 	return nil

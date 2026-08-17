@@ -10,8 +10,8 @@ import (
 	"nvd/internal/config"
 	"nvd/internal/convertor"
 	"nvd/internal/deps_downloader"
-	"nvd/internal/downloader"
 	"nvd/internal/handler"
+	"nvd/internal/loader"
 	"nvd/internal/logger"
 	"os/signal"
 	"path/filepath"
@@ -31,7 +31,7 @@ func main() {
 	}
 	os.Chdir(filepath.Dir(exePath))
 
-	dl, err := logger.InitDownloaderLogger("app.log")
+	dl, err := logger.InitDownloaderLogger()
 	if err != nil {
 		fmt.Printf("Logger initialization error: %s\n", err.Error())
 		os.Exit(1)
@@ -65,9 +65,9 @@ func main() {
 		}
 	}
 
-	dow := downloader.NewDownloader()
+	loa := loader.NewLoader()
 
-	if err := dow.UpdatePath(); err != nil {
+	if err := loa.UpdatePath(); err != nil {
 		dl.LogFatal(fmt.Sprintf("Downloader path update error: %s", err.Error()))
 		os.Exit(1)
 	}
@@ -81,11 +81,11 @@ func main() {
 	ctx, close := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer close()
 
-	svc := service.NewDownloadService(ctx, config.DownloadPath, dl, dow, con, config.MaxRetryCount)
+	svc := service.NewDownloadService(ctx, config.DownloadPath, dl, loa, con, config.MaxRetryCount)
 
 	svc.CreateWorkers(5)
 
-	h := handler.NewExtensionHandler(ctx, svc, dl, cr, dow)
+	h := handler.NewExtensionHandler(ctx, svc, dl, cr, loa)
 
 	r := chi.NewRouter()
 

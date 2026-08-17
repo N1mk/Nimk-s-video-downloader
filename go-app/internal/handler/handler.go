@@ -8,9 +8,9 @@ import (
 	"io"
 	"net/http"
 	"nvd/internal/config"
-	"nvd/internal/downloader"
+	"nvd/internal/loader"
 	"nvd/internal/logger"
-	"nvd/internal/models"
+	"nvd/internal/project_errors"
 	"nvd/internal/service"
 	"strconv"
 )
@@ -27,11 +27,11 @@ type ExtensionHandler struct {
 	svc *service.DownloadService
 	dl  *logger.DownloaderLogger
 	cr  *config.ConfigReader
-	dow *downloader.Downloader
+	loa *loader.Loader
 }
 
-func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *logger.DownloaderLogger, cr *config.ConfigReader, dow *downloader.Downloader) *ExtensionHandler {
-	return &ExtensionHandler{ctx: ctx, svc: svc, dl: dl, cr: cr, dow: dow}
+func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *logger.DownloaderLogger, cr *config.ConfigReader, loa *loader.Loader) *ExtensionHandler {
+	return &ExtensionHandler{ctx: ctx, svc: svc, dl: dl, cr: cr, loa: loa}
 }
 
 func (h *ExtensionHandler) PostDownload(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +58,7 @@ func (h *ExtensionHandler) PostJobStatusRequest(w http.ResponseWriter, r *http.R
 	}
 
 	job, err := h.svc.GetJobByID(data.ID)
-	if errors.Is(err, models.ErrNotFound) {
+	if errors.Is(err, project_errors.ErrNotFound) {
 		h.dl.LogError("Job not found")
 		http.Error(w, "Job not found", http.StatusNotFound)
 		return
@@ -142,7 +142,7 @@ func (h *ExtensionHandler) PostLogs(w http.ResponseWriter, r *http.Request) {
 func (h *ExtensionHandler) PostDownloaderUpdate(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	if err := h.dow.Update(h.ctx); err != nil {
+	if err := h.loa.Update(h.ctx); err != nil {
 		h.dl.LogError(fmt.Sprintf("Downloader update error: %s", err.Error()))
 		http.Error(w, "Update error", http.StatusInternalServerError)
 	}

@@ -1,30 +1,30 @@
-package downloader
+package loader
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	"nvd/internal/models"
+	"nvd/internal/project_errors"
 	"os/exec"
 	"strings"
 )
 
-type Downloader struct {
+type Loader struct {
 	ytdlpPath string
 }
 
-func NewDownloader() *Downloader {
-	return &Downloader{}
+func NewLoader() *Loader {
+	return &Loader{}
 }
 
-func (d *Downloader) Update(ctx context.Context) error {
+func (d *Loader) Update(ctx context.Context) error {
 	cmd := exec.CommandContext(ctx, d.ytdlpPath, "-U")
 
 	setPlatformSysProcAttr(cmd)
 
 	err := cmd.Run()
 	if ctx.Err() == context.DeadlineExceeded {
-		return models.ErrDeadlineExceeded
+		return project_errors.ErrDeadlineExceeded
 	} else if err != nil {
 		return fmt.Errorf("update error: %w", err)
 	}
@@ -32,7 +32,7 @@ func (d *Downloader) Update(ctx context.Context) error {
 	return nil
 }
 
-func (d *Downloader) GetFileName(ctx context.Context, link string) (fileName string, err error) {
+func (d *Loader) GetFileName(ctx context.Context, link string) (fileName string, err error) {
 	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--get-filename", "-o", "%(title)s.%(ext)s", link)
 	setPlatformSysProcAttr(cmd)
 
@@ -40,21 +40,19 @@ func (d *Downloader) GetFileName(ctx context.Context, link string) (fileName str
 	cmd.Stdout = &out
 
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("%w: %w", models.ErrGetFilenameCommandRunError, err)
+		return "", fmt.Errorf("%w: %w", project_errors.ErrGetFilenameCommandRunError, err)
 	}
 
 	return strings.TrimSpace(out.String()), nil
 }
 
-func (d *Downloader) Download(ctx context.Context, link string, downloadPath string, quality string) (err error) {
-	fmt.Println(quality) // delete
-
+func (d *Loader) Download(ctx context.Context, link string, downloadPath string, quality string) (err error) {
 	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s]+ba/b", quality), link)
 	cmd.Dir = downloadPath
 	setPlatformSysProcAttr(cmd)
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%w: %w", models.ErrDownloadCommandRunError, err)
+		return fmt.Errorf("%w: %w", project_errors.ErrDownloadCommandRunError, err)
 	}
 
 	return nil
