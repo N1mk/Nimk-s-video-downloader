@@ -19,13 +19,21 @@ type Config struct {
 	AddToAutostart bool   `json:"add_to_autostart"`
 }
 
+const configFileName = "config.json"
+
 type ConfigReader struct {
 	configPath string
 }
 
 func NewConfigReader(exePath string) *ConfigReader {
 	exeDir := filepath.Dir(exePath)
-	configPath := filepath.Join(exeDir, "config.json")
+
+	configPath := filepath.Join(exeDir, configFileName)
+
+	_, err := os.Stat(configPath)
+	if err != nil {
+		os.Create(configPath)
+	}
 
 	return &ConfigReader{configPath: configPath}
 }

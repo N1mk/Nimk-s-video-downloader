@@ -109,10 +109,14 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 
 			fileName, ok, err := s.tryDownload(job)
 			if !ok {
+				retried := false
 				if errors.Is(err, models.ErrDownloadCommandRunError) || errors.Is(err, models.ErrGetFilenameCommandRunError) {
 					s.dl.LogError(fmt.Sprintf("Worker %d error: download error: %s", id, err.Error()))
-					s.dl.LogInfo(fmt.Sprintf("Worker %d: Retrying", id))
+					s.dl.LogInfo(fmt.Sprintf("Worker %d: Retrying...", id))
 					job.Status = JobStatusRetrying
+
+					retried = true
+
 					isDownloaded := false
 					alreadyExists := false
 					for i := 0; i < s.maxRetryCount; i++ {
@@ -148,9 +152,11 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 					job.Error = err
 					continue
 				}
-				s.dl.LogInfo(fmt.Sprintf("Worker %d error: video file already exists!", id))
-				job.Status = JobStatusAlreadyExists
-				continue
+				if !retried {
+					s.dl.LogInfo(fmt.Sprintf("Worker %d error: video file already exists!", id))
+					job.Status = JobStatusAlreadyExists
+					continue
+				}
 			}
 
 			if err := s.con.Convert(job.Ctx, s.downloadPath, fileName, job.Extension); err != nil {
@@ -174,7 +180,7 @@ func (s *DownloadService) tryDownload(job *DownloadJob) (fileName string, ok boo
 	pathToFile := strings.TrimSuffix(filepath.Join(s.downloadPath, fileName), oldExt) + "." + job.Extension
 
 	_, err = os.Stat(pathToFile)
-	if err == nil && job.Extension != oldExt {
+	if err == nil {
 		return fileName, false, nil
 	}
 	err = nil

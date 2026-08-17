@@ -174,7 +174,7 @@ function startStatusPolling(id) {
           statusDiv.innerText = 'Download complete!';
           clearInterval(statusIntervalId);
         } else if (data.status === jobStatusRetrying) {
-          statusDiv.innerText = 'Error. Retrying';
+          statusDiv.innerText = 'Error. Retrying...';
         } else if (data.status === jobStatusAlreadyExists) {
           statusDiv.innerText = 'Video file already exists!'
         }
