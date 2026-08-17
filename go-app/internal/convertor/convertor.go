@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -17,30 +16,6 @@ type Convertor struct {
 
 func NewConvertor() *Convertor {
 	return &Convertor{}
-}
-
-func (c *Convertor) UpdatePath() error {
-	var ffmpegName string
-	switch runtime.GOOS {
-	case "windows":
-		ffmpegName = "ffmpeg.exe"
-	case "linux":
-		ffmpegName = "ffmpeg"
-	case "darwin":
-		ffmpegName = "ffmpeg"
-	default:
-		return models.ErrUnknownOS
-	}
-
-	exePath, err := os.Executable()
-	if err != nil {
-		return err
-	}
-
-	dir := filepath.Dir(exePath)
-	c.ffmpegPath = filepath.Join(dir, ffmpegName)
-
-	return nil
 }
 
 func (c *Convertor) Convert(ctx context.Context, dir string, fileName string, extension string) error {

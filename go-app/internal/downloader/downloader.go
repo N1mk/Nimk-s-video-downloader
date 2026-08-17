@@ -5,10 +5,7 @@ import (
 	"context"
 	"fmt"
 	"nvd/internal/models"
-	"os"
 	"os/exec"
-	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -18,30 +15,6 @@ type Downloader struct {
 
 func NewDownloader() *Downloader {
 	return &Downloader{}
-}
-
-func (d *Downloader) UpdatePath() error {
-	var ytDlpName string
-	switch runtime.GOOS {
-	case "windows":
-		ytDlpName = "yt-dlp.exe"
-	case "linux":
-		ytDlpName = "yt-dlp_linux"
-	case "darwin":
-		ytDlpName = "yt-dlp_macos"
-	default:
-		return models.ErrUnknownOS
-	}
-
-	exePath, err := os.Executable()
-	if err != nil {
-		return err
-	}
-
-	dir := filepath.Dir(exePath)
-	d.ytdlpPath = filepath.Join(dir, ytDlpName)
-
-	return nil
 }
 
 func (d *Downloader) Update(ctx context.Context) error {
