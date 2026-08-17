@@ -121,7 +121,7 @@ func (l *DownloaderLogger) LogFatal(s string) {
 
 func (l *DownloaderLogger) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		l.LogInfo(fmt.Sprintf("Got %s request on localhost:8080/%s", r.Method, r.Pattern))
+		l.LogInfo(fmt.Sprintf("Got %s request on localhost:8080%s from %s", r.Method, r.URL.Path, r.RemoteAddr))
 		next.ServeHTTP(w, r)
 	})
 }
