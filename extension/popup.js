@@ -11,20 +11,25 @@ const jobStatusAlreadyExists = 4
 const selectEl = document.getElementById('formatSelect');
 const wrapperEl = document.getElementById('selectWrapper');
 
+document.querySelectorAll('#formatSelect, #qualitySelect').forEach(select => {
+  const wrapper = select.parentElement;
 
-if (selectEl && wrapperEl) {
-  selectEl.addEventListener('focus', () => {
-    wrapperEl.classList.add('is-open');
+  select.addEventListener('mousedown', (e) => {
+    if (document.activeElement === select && wrapper.classList.contains('is-open')) {
+      setTimeout(() => select.blur(), 0);
+    } else {
+      wrapper.classList.add('is-open');
+    }
   });
 
-  selectEl.addEventListener('change', () => {
-    selectEl.blur();
+  select.addEventListener('change', () => {
+    select.blur();
   });
 
-  selectEl.addEventListener('blur', () => {
-    wrapperEl.classList.remove('is-open');
+  select.addEventListener('blur', () => {
+    wrapper.classList.remove('is-open');
   });
-}
+});
 
 function loadConfig() {
   chrome.runtime.sendMessage({ action: 'fetchGet', path: '/config' }, response => {
@@ -174,7 +179,7 @@ function startStatusPolling(id) {
           statusDiv.innerText = 'Download complete!';
           clearInterval(statusIntervalId);
         } else if (data.status === jobStatusRetrying) {
-          statusDiv.innerText = 'Error. Retrying...';
+          statusDiv.innerText = 'Error. Retrying';
         } else if (data.status === jobStatusAlreadyExists) {
           statusDiv.innerText = 'Video file already exists!'
         }

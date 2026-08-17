@@ -72,7 +72,7 @@
     .settings-title {
       font-weight: 500;
       font-size: 11px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       color: #FFFFFF;
       opacity: 0.8;
       text-transform: uppercase;
@@ -91,7 +91,6 @@
       box-sizing: border-box;
       outline: none;
       transition: border-color 0.2s ease;
-      margin-bottom: 10px;
     }
     input[type="text"]:focus {
       border-color: #FF0D31;
@@ -190,15 +189,15 @@
     }
     
     .field-group {
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     label {
       display: block;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
       color: #FFFFFF;
       opacity: 0.8;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     
     #sendBtn {
@@ -210,6 +209,7 @@
       font-size: 13px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      margin-top: 4px;
     }
     #sendBtn:hover {
       background-color: #e00024;
@@ -235,8 +235,14 @@
   
   <div id="settingsMenu">
     <div class="settings-title">Configuration</div>
-    <input type="text" id="downloadPathInput" placeholder="Download destination...">
-    <input type="text" id="maxRetryCountInput" placeholder="Max retry count...">
+    <div class="field-group">
+      <label for="downloadPathInput">Download path:</label>
+      <input type="text" id="downloadPathInput" placeholder="Download destination...">
+    </div>
+    <div class="field-group">
+      <label for="maxRetryCountInput">Max retries:</label>
+      <input type="text" id="maxRetryCountInput" placeholder="Max retry count...">
+    </div>
     <div class="settings-actions-row">
       <button id="saveConfigBtn" class="btn-save">Save</button>
       <button id="openLogsBtn" class="btn-logs">Logs</button>
@@ -257,6 +263,9 @@
           <option value="wav">WAV (Audio)</option>
         </select>
       </div>
+    </div>
+    
+    <div class="field-group">
       <label for="qualitySelect">Select quality:</label>
       <div id="qualitySelectWrapper" class="select-wrapper">
         <select id="qualitySelect">
