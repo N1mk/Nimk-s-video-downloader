@@ -1,4 +1,4 @@
-//go:build windows
+//go:build darwin
 
 package loader
 
@@ -6,12 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"syscall"
 )
 
 const (
-	ytDlpName = "yt-dlp.exe"
-	qjsName   = "qjs.exe"
+	ytDlpName = "yt-dlp"
+	qjsName   = "qjs"
 )
 
 func (d *Loader) UpdatePath() error {
@@ -28,8 +27,4 @@ func (d *Loader) UpdatePath() error {
 	return nil
 }
 
-func setPlatformSysProcAttr(cmd *exec.Cmd) {
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		CreationFlags: 0x08000000,
-	}
-}
+func setPlatformSysProcAttr(cmd *exec.Cmd) {}

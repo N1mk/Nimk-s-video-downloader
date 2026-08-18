@@ -11,6 +11,7 @@ import (
 
 type Loader struct {
 	ytdlpPath string
+	qjsPath   string
 }
 
 func NewLoader() *Loader {
@@ -33,7 +34,7 @@ func (d *Loader) Update(ctx context.Context) error {
 }
 
 func (d *Loader) GetFileName(ctx context.Context, link string) (fileName string, err error) {
-	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--get-filename", "-o", "%(title)s.%(ext)s", link)
+	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--get-filename", "--js-runtimes", fmt.Sprintf("quickjs:%s", d.qjsPath), "-o", "%(title)s.%(ext)s", link)
 	setPlatformSysProcAttr(cmd)
 
 	var out bytes.Buffer
@@ -47,7 +48,7 @@ func (d *Loader) GetFileName(ctx context.Context, link string) (fileName string,
 }
 
 func (d *Loader) Download(ctx context.Context, link string, downloadPath string, quality string) (err error) {
-	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s]+ba/b", quality), link)
+	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--js-runtimes", fmt.Sprintf("quickjs:%s", d.qjsPath), "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s]+ba/b", quality), link)
 	cmd.Dir = downloadPath
 	setPlatformSysProcAttr(cmd)
 

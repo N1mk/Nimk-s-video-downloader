@@ -143,7 +143,11 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 							break
 						}
 					}
-					if !isDownloaded || alreadyExists {
+
+					if !isDownloaded {
+						if !alreadyExists {
+							job.Status = JobStatusError
+						}
 						continue
 					}
 				} else if err != nil {

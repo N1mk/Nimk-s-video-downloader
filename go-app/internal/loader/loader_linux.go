@@ -1,4 +1,4 @@
-//go:build !windows
+//go:build linux
 
 package loader
 
@@ -8,7 +8,10 @@ import (
 	"path/filepath"
 )
 
-const ytDlpName = "yt-dlp"
+const (
+	ytDlpName = "yt-dlp"
+	qjsName   = "qjs"
+)
 
 func (d *Loader) UpdatePath() error {
 
@@ -19,6 +22,7 @@ func (d *Loader) UpdatePath() error {
 
 	dir := filepath.Dir(exePath)
 	d.ytdlpPath = filepath.Join(dir, ytDlpName)
+	d.qjsPath = filepath.Join(dir, qjsName)
 
 	return nil
 }
