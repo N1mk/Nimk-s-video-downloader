@@ -8,13 +8,11 @@ import (
 	"path/filepath"
 
 	"github.com/emersion/go-autostart"
-	golnk "github.com/parsiya/golnk"
+	lnk "github.com/parsiya/golnk"
 	"golang.org/x/sys/windows"
 )
 
-func addToAutostartUnix(_ *logger.DownloaderLogger) (ok bool, err error) { return false, nil }
-
-func addToAutostartWindows() (ok bool, err error) {
+func AddToAutostart(_ *logger.DownloaderLogger) (ok bool, err error) {
 	exePath, err := os.Executable()
 	if err != nil {
 		return false, err
@@ -29,14 +27,14 @@ func addToAutostartWindows() (ok bool, err error) {
 	}
 
 	if app.IsEnabled() {
-		shortcutPath, err := windows.KnownFolderPath(windows.FOLDERID_Startup, 0)
+		shortcutDirPath, err := windows.KnownFolderPath(windows.FOLDERID_Startup, 0)
 
-		lnk, err := golnk.File(filepath.Join(shortcutPath, "nvd.lnk"))
+		shotrcut, err := lnk.File(filepath.Join(shortcutDirPath, "nvd.lnk"))
 		if err != nil {
 			return false, err
 		}
 
-		if lnk.LinkInfo.LocalBasePath == exePath {
+		if shotrcut.LinkInfo.LocalBasePath == exePath {
 			return false, nil
 		} else {
 			if err := app.Disable(); err != nil {

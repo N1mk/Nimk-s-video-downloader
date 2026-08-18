@@ -12,9 +12,7 @@ import (
 	"github.com/emersion/go-autostart"
 )
 
-func addToAutostartWindows() (ok bool, err error) { return false, nil }
-
-func addToAutostartUnix(dl *logger.DownloaderLogger) (ok bool, err error) {
+func AddToAutostart(dl *logger.DownloaderLogger) (ok bool, err error) {
 	exePath, err := os.Executable()
 	if err != nil {
 		return false, err
