@@ -19,7 +19,7 @@ func NewConvertor() *Convertor {
 }
 
 func (c *Convertor) Convert(ctx context.Context, dir string, fileName string, extension string) (newFileName string, err error) {
-	if filepath.Ext(fileName) == extension {
+	if filepath.Ext(fileName) == "."+extension {
 		return fileName, nil
 	}
 

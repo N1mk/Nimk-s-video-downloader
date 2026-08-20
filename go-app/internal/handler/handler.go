@@ -71,8 +71,8 @@ func (h *ExtensionHandler) PostJobStatusRequest(w http.ResponseWriter, r *http.R
 	}
 
 	var errStr string
-	if err != nil {
-		errStr = err.Error()
+	if job.Error != nil {
+		errStr = job.Error.Error()
 	}
 
 	exprotJob := &ExportJob{ID: job.ID, Status: job.Status, ErrorString: errStr}

@@ -148,6 +148,8 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 						if !alreadyExists {
 							job.Status = JobStatusError
 						}
+						job.Status = JobStatusError
+						job.Error = fmt.Errorf("cannot download")
 						continue
 					}
 				} else if err != nil {
