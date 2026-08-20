@@ -22,6 +22,12 @@ type ExtensionRequest struct {
 	Quality   string `json:"quality"`
 }
 
+type ExportJob struct {
+	ID          int    `json:"id"`
+	Status      uint8  `json:"status"`
+	ErrorString string `json:"error"`
+}
+
 type ExtensionHandler struct {
 	ctx context.Context
 	svc *service.DownloadService
@@ -64,9 +70,16 @@ func (h *ExtensionHandler) PostJobStatusRequest(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	var errStr string
+	if err != nil {
+		errStr = err.Error()
+	}
+
+	exprotJob := &ExportJob{ID: job.ID, Status: job.Status, ErrorString: errStr}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(job); err != err {
+	if err := json.NewEncoder(w).Encode(exprotJob); err != err {
 		h.dl.LogError(fmt.Sprintf("Job marshaling error: %s", err.Error()))
 		http.Error(w, fmt.Sprintf("Job marshaling error: %s", err.Error()), http.StatusInternalServerError)
 		return
@@ -146,12 +159,6 @@ func (h *ExtensionHandler) PostDownloaderUpdate(w http.ResponseWriter, r *http.R
 		h.dl.LogError(fmt.Sprintf("Downloader update error: %s", err.Error()))
 		http.Error(w, "Update error", http.StatusInternalServerError)
 	}
-}
-
-func (h *ExtensionHandler) Options(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	w.WriteHeader(http.StatusOK)
 }
 
 func CorsMiddleware(next http.Handler) http.Handler {

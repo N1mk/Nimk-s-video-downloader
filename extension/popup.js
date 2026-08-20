@@ -173,7 +173,7 @@ function startStatusPolling(id) {
         if (data.status === jobStatusInProcess) {
           statusDiv.innerText = `Video downloading...`;
         } else if (data.status === jobStatusError) {
-          statusDiv.innerText = `Error`;
+          statusDiv.innerText = `Error: ${data.error}`;
           clearInterval(statusIntervalId);
         } else if (data.status === jobStatusComplete) {
           statusDiv.innerText = 'Download complete!';

@@ -16,21 +16,21 @@ import (
 )
 
 const (
-	JobStatusInProcess     int8 = 0
-	JobStatusError         int8 = 1
-	JobStatusRetrying      int8 = 2
-	JobStatusComplete      int8 = 3
-	JobStatusAlreadyExists int8 = 4
+	JobStatusInProcess     uint8 = 0
+	JobStatusError         uint8 = 1
+	JobStatusRetrying      uint8 = 2
+	JobStatusComplete      uint8 = 3
+	JobStatusAlreadyExists uint8 = 4
 )
 
 type DownloadJob struct {
-	ID        int             `json:"id"`
-	Ctx       context.Context `json:"ctx"`
-	Link      string          `json:"job.Link"`
-	Extension string          `json:"extension"`
-	Quality   string          `json:"quality"`
-	Status    int8            `json:"status"`
-	Error     error           `json:"error"`
+	ID        int
+	Ctx       context.Context
+	Link      string
+	Extension string
+	Quality   string
+	Status    uint8
+	Error     error
 }
 
 type DownloadService struct {
