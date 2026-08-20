@@ -19,23 +19,38 @@ type Config struct {
 	AddToAutostart bool   `json:"add_to_autostart"`
 }
 
-const configFileName = "config.json"
+const (
+	ConfigFileName        string = "config.json"
+	DefaultDownloadPath   string = ""
+	DefaultMaxRetryCount  int    = 2
+	DefaultAddToAutostart        = true
+)
 
 type ConfigReader struct {
 	configPath string
 }
 
-func NewConfigReader(exePath string) *ConfigReader {
+func NewConfigReader(exePath string) (configReader *ConfigReader, err error) {
 	exeDir := filepath.Dir(exePath)
 
-	configPath := filepath.Join(exeDir, configFileName)
+	configPath := filepath.Join(exeDir, ConfigFileName)
 
-	_, err := os.Stat(configPath)
-	if err != nil {
+	if _, err := os.Stat(configPath); err != nil {
 		os.Create(configPath)
+
+		config := &Config{DownloadPath: DefaultDownloadPath, MaxRetryCount: DefaultMaxRetryCount, AddToAutostart: DefaultAddToAutostart}
+
+		data, err := json.Marshal(config)
+		if err != nil {
+			return nil, fmt.Errorf("config marshalling error: %w", err)
+		}
+
+		if err := os.WriteFile(configPath, data, 0644); err != nil {
+			return nil, fmt.Errorf("writing config file error: %w", err)
+		}
 	}
 
-	return &ConfigReader{configPath: configPath}
+	return &ConfigReader{configPath: configPath}, nil
 }
 
 func (cr *ConfigReader) GetConfig() (*Config, error) {

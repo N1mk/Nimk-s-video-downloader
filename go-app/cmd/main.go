@@ -37,7 +37,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	cr := config.NewConfigReader(exePath)
+	cr, err := config.NewConfigReader(exePath)
+	if err != nil {
+		dl.LogFatal(fmt.Sprintf("Config reader error: %s", err.Error()))
+		os.Exit(1)
+	}
+
 	config, err := cr.GetConfig()
 	if err != nil {
 		dl.LogFatal(fmt.Sprintf("Config reader error: %s", err.Error()))

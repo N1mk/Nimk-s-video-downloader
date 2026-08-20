@@ -141,7 +141,6 @@ document.getElementById('sendBtn').addEventListener('click', async () => {
     body: { url: cleanUrl, extension: selectedExtension, quality: selectedQuality, id: randomId }
   }, response => {
     if (response && response.success) {
-      statusDiv.innerText = `Download started!`;
       startStatusPolling(randomId);
     } else {
       statusDiv.innerText = `Conection error: make sure the application is running`;
@@ -171,7 +170,7 @@ function startStatusPolling(id) {
         const data = response.data;
         
         if (data.status === jobStatusInProcess) {
-          statusDiv.innerText = `Video downloading...`;
+          statusDiv.innerText = `Downloading...`;
         } else if (data.status === jobStatusError) {
           statusDiv.innerText = `Error: ${data.error}`;
           clearInterval(statusIntervalId);
@@ -182,6 +181,8 @@ function startStatusPolling(id) {
           statusDiv.innerText = 'Error. Retrying...';
         } else if (data.status === jobStatusAlreadyExists) {
           statusDiv.innerText = 'Video file already exists!'
+        } else {
+          statusDiv.innerText = 'Download did not start.\n This may be due to an error in the app.'
         }
       }
     });
