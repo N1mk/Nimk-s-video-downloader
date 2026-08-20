@@ -48,7 +48,17 @@ func (d *Loader) GetFileName(ctx context.Context, link string) (fileName string,
 }
 
 func (d *Loader) Download(ctx context.Context, link string, downloadPath string, quality string) (err error) {
-	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--js-runtimes", fmt.Sprintf("quickjs:%s", d.qjsPath), "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s]+ba/b", quality), link)
+	bitrate := "16000"
+	switch quality {
+	case "1080":
+		bitrate = "8000"
+	case "720":
+		bitrate = "5000"
+	case "480":
+		bitrate = "2500"
+	}
+
+	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--js-runtimes", fmt.Sprintf("quickjs:%s", d.qjsPath), "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s][vbr<=%s]+ba/b", quality, bitrate), link)
 	cmd.Dir = downloadPath
 	setPlatformSysProcAttr(cmd)
 
