@@ -21,7 +21,7 @@ type Config struct {
 
 const (
 	ConfigFileName        string = "config.json"
-	DefaultDownloadPath   string = ""
+	DefaultDownloadPath   string = "D:/Downloads/DownloadedVideos"
 	DefaultMaxRetryCount  int    = 2
 	DefaultAddToAutostart        = true
 )
