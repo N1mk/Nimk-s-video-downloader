@@ -165,6 +165,8 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 				}
 			}
 
+			s.dl.LogInfo(fileName)
+
 			newFileName, err := s.con.Convert(job.Ctx, s.downloadPath, fileName, job.Extension)
 			if err != nil {
 				s.dl.LogError(fmt.Sprintf("Worker %d error: convert error: %s", id, err.Error()))

@@ -22,4 +22,5 @@ require (
 	github.com/parsiya/golnk v0.0.0-20260401090434-89c3c681a14a // indirect
 	github.com/ulikunitz/xz v0.5.16 // indirect
 	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 )

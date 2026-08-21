@@ -3,10 +3,10 @@ package loader
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"nvd/internal/project_errors"
 	"os/exec"
-	"strings"
 )
 
 type Loader interface {
@@ -46,7 +46,7 @@ func (l *DefaultLoader) Update(ctx context.Context) error {
 }
 
 func (l *DefaultLoader) GetFileName(ctx context.Context, link string) (fileName string, err error) {
-	cmd := exec.CommandContext(ctx, l.ytdlpPath, "--restrict-filenames", "--get-filename", "--js-runtimes", fmt.Sprintf("quickjs:%s", l.qjsPath), "-o", "%(title)s.%(ext)s", link)
+	cmd := exec.CommandContext(ctx, l.ytdlpPath, "--print", "%()j", "--js-runtimes", fmt.Sprintf("quickjs:%s", l.qjsPath), link)
 	setPlatformSysProcAttr(cmd)
 
 	var out bytes.Buffer
@@ -56,7 +56,16 @@ func (l *DefaultLoader) GetFileName(ctx context.Context, link string) (fileName 
 		return "", fmt.Errorf("%w: %w", project_errors.ErrGetFilenameCommandRunError, err)
 	}
 
-	return strings.TrimSpace(out.String()), nil
+	var meta struct {
+		Title string `json:"title"`
+		Ext   string `json:"ext"`
+	}
+
+	if err := json.Unmarshal(out.Bytes(), &meta); err != nil {
+		return "", fmt.Errorf("json parse error: %w", err)
+	}
+
+	return meta.Title + "." + meta.Ext, nil
 }
 
 func (l *DefaultLoader) Download(ctx context.Context, link string, downloadPath string, quality string) error {
@@ -70,7 +79,7 @@ func (l *DefaultLoader) Download(ctx context.Context, link string, downloadPath 
 		bitrate = "2500"
 	}
 
-	cmd := exec.CommandContext(ctx, l.ytdlpPath, "--restrict-filenames", "--js-runtimes", fmt.Sprintf("quickjs:%s", l.qjsPath), "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s][vbr<=%s]+ba/b", quality, bitrate), link)
+	cmd := exec.CommandContext(ctx, l.ytdlpPath, "--js-runtimes", fmt.Sprintf("quickjs:%s", l.qjsPath), "--no-restrict-filenames", "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s][vbr<=%s]+ba/b", quality, bitrate), link)
 	cmd.Dir = downloadPath
 	setPlatformSysProcAttr(cmd)
 
