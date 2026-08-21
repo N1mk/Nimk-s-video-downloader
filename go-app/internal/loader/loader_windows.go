@@ -14,7 +14,7 @@ const (
 	qjsName   = "qjs.exe"
 )
 
-func (d *Loader) UpdatePath() error {
+func (l *DefaultLoader) updatePath() error {
 
 	exePath, err := os.Executable()
 	if err != nil {
@@ -22,8 +22,8 @@ func (d *Loader) UpdatePath() error {
 	}
 
 	dir := filepath.Dir(exePath)
-	d.ytdlpPath = filepath.Join(dir, ytDlpName)
-	d.qjsPath = filepath.Join(dir, qjsName)
+	l.ytdlpPath = filepath.Join(dir, ytDlpName)
+	l.qjsPath = filepath.Join(dir, qjsName)
 
 	return nil
 }

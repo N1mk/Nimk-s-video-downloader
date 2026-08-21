@@ -33,10 +33,10 @@ type ExtensionHandler struct {
 	svc *service.DownloadService
 	dl  *logger.DownloaderLogger
 	cr  *config.ConfigReader
-	loa *loader.Loader
+	loa *loader.DefaultLoader
 }
 
-func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *logger.DownloaderLogger, cr *config.ConfigReader, loa *loader.Loader) *ExtensionHandler {
+func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *logger.DownloaderLogger, cr *config.ConfigReader, loa *loader.DefaultLoader) *ExtensionHandler {
 	return &ExtensionHandler{ctx: ctx, svc: svc, dl: dl, cr: cr, loa: loa}
 }
 

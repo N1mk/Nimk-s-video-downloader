@@ -41,12 +41,12 @@ type DownloadService struct {
 	workersCount  int
 	jobs          []*DownloadJob
 	dl            *logger.DownloaderLogger
-	loa           *loader.Loader
-	con           *convertor.Convertor
+	loa           *loader.DefaultLoader
+	con           *convertor.DefaultConvertor
 	maxRetryCount int
 }
 
-func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, loa *loader.Loader, con *convertor.Convertor, maxRetryCount int) *DownloadService {
+func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, loa *loader.DefaultLoader, con *convertor.DefaultConvertor, maxRetryCount int) *DownloadService {
 	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *DownloadJob), jobs: make([]*DownloadJob, 0), dl: dl, loa: loa, con: con, maxRetryCount: maxRetryCount}
 }
 

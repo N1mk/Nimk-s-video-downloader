@@ -70,16 +70,15 @@ func main() {
 		}
 	}
 
-	loa := loader.NewLoader()
-
-	if err := loa.UpdatePath(); err != nil {
-		dl.LogFatal(fmt.Sprintf("Downloader path update error: %s", err.Error()))
+	loa, err := loader.NewDefaultLoader()
+	if err != nil {
+		dl.LogFatal(fmt.Sprintf("Loader initialization error: %s", err.Error()))
 		os.Exit(1)
 	}
 
-	con := convertor.NewConvertor()
-	if err := con.UpdatePath(); err != nil {
-		dl.LogFatal(fmt.Sprintf("Convertor path update error: %s", err.Error()))
+	con, err := convertor.NewDefaultConvertor()
+	if err != nil {
+		dl.LogFatal(fmt.Sprintf("Convertor initialization error: %s", err.Error()))
 		os.Exit(1)
 	}
 

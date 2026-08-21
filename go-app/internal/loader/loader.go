@@ -9,17 +9,29 @@ import (
 	"strings"
 )
 
-type Loader struct {
+type Loader interface {
+	Update(ctx context.Context) error
+	GetFileName(ctx context.Context, link string) (fileName string, err error)
+	Download(ctx context.Context, link string, downloadPath string, quality string) error
+}
+
+type DefaultLoader struct {
 	ytdlpPath string
 	qjsPath   string
 }
 
-func NewLoader() *Loader {
-	return &Loader{}
+func NewDefaultLoader() (loa *DefaultLoader, err error) {
+	l := &DefaultLoader{}
+
+	if err := l.updatePath(); err != nil {
+		return nil, err
+	}
+
+	return l, nil
 }
 
-func (d *Loader) Update(ctx context.Context) error {
-	cmd := exec.CommandContext(ctx, d.ytdlpPath, "-U")
+func (l *DefaultLoader) Update(ctx context.Context) error {
+	cmd := exec.CommandContext(ctx, l.ytdlpPath, "-U")
 
 	setPlatformSysProcAttr(cmd)
 
@@ -33,8 +45,8 @@ func (d *Loader) Update(ctx context.Context) error {
 	return nil
 }
 
-func (d *Loader) GetFileName(ctx context.Context, link string) (fileName string, err error) {
-	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--get-filename", "--js-runtimes", fmt.Sprintf("quickjs:%s", d.qjsPath), "-o", "%(title)s.%(ext)s", link)
+func (l *DefaultLoader) GetFileName(ctx context.Context, link string) (fileName string, err error) {
+	cmd := exec.CommandContext(ctx, l.ytdlpPath, "--restrict-filenames", "--get-filename", "--js-runtimes", fmt.Sprintf("quickjs:%s", l.qjsPath), "-o", "%(title)s.%(ext)s", link)
 	setPlatformSysProcAttr(cmd)
 
 	var out bytes.Buffer
@@ -47,7 +59,7 @@ func (d *Loader) GetFileName(ctx context.Context, link string) (fileName string,
 	return strings.TrimSpace(out.String()), nil
 }
 
-func (d *Loader) Download(ctx context.Context, link string, downloadPath string, quality string) (err error) {
+func (l *DefaultLoader) Download(ctx context.Context, link string, downloadPath string, quality string) error {
 	bitrate := "16000"
 	switch quality {
 	case "1080":
@@ -58,7 +70,7 @@ func (d *Loader) Download(ctx context.Context, link string, downloadPath string,
 		bitrate = "2500"
 	}
 
-	cmd := exec.CommandContext(ctx, d.ytdlpPath, "--restrict-filenames", "--js-runtimes", fmt.Sprintf("quickjs:%s", d.qjsPath), "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s][vbr<=%s]+ba/b", quality, bitrate), link)
+	cmd := exec.CommandContext(ctx, l.ytdlpPath, "--restrict-filenames", "--js-runtimes", fmt.Sprintf("quickjs:%s", l.qjsPath), "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s][vbr<=%s]+ba/b", quality, bitrate), link)
 	cmd.Dir = downloadPath
 	setPlatformSysProcAttr(cmd)
 
@@ -66,5 +78,19 @@ func (d *Loader) Download(ctx context.Context, link string, downloadPath string,
 		return fmt.Errorf("%w: %w", project_errors.ErrDownloadCommandRunError, err)
 	}
 
+	return nil
+}
+
+type MockLoader struct{}
+
+func (m *MockLoader) Update(_ context.Context) error {
+	return nil
+}
+
+func (m *MockLoader) GetFileName(_ context.Context, _ string) (fileName string, err error) {
+	return "downloaded_video.webm", nil
+}
+
+func (m *MockLoader) Download(_ context.Context, _ string, _ string, _ string) error {
 	return nil
 }

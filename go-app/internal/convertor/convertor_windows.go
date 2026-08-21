@@ -11,7 +11,7 @@ import (
 
 const ffmpegName = "ffmpeg.exe"
 
-func (c *Convertor) UpdatePath() error {
+func (c *DefaultConvertor) updatePath() error {
 	exePath, err := os.Executable()
 	if err != nil {
 		return err

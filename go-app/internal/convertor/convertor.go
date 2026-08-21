@@ -10,15 +10,25 @@ import (
 	"strings"
 )
 
-type Convertor struct {
+type Converotr interface {
+	Convert(ctx context.Context, dir string, fileName string, extension string) (newFileName string, err error)
+}
+
+type DefaultConvertor struct {
 	ffmpegPath string
 }
 
-func NewConvertor() *Convertor {
-	return &Convertor{}
+func NewDefaultConvertor() (con *DefaultConvertor, err error) {
+	c := &DefaultConvertor{}
+
+	if err := c.updatePath(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
-func (c *Convertor) Convert(ctx context.Context, dir string, fileName string, extension string) (newFileName string, err error) {
+func (c *DefaultConvertor) Convert(ctx context.Context, dir string, fileName string, extension string) (newFileName string, err error) {
 	if filepath.Ext(fileName) == "."+extension {
 		return fileName, nil
 	}
@@ -38,4 +48,10 @@ func (c *Convertor) Convert(ctx context.Context, dir string, fileName string, ex
 	}
 
 	return newFileName, nil
+}
+
+type MockConvertor struct{}
+
+func (m *MockConvertor) Convert(_ context.Context, _ string, fileName string, extension string) (newFileName string, err error) {
+	return strings.TrimSuffix(fileName, filepath.Ext(fileName)) + "." + extension, nil
 }
