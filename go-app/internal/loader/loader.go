@@ -69,14 +69,18 @@ func (l *DefaultLoader) GetFileName(ctx context.Context, link string) (fileName 
 }
 
 func (l *DefaultLoader) Download(ctx context.Context, link string, downloadPath string, quality string) error {
-	bitrate := "16000"
+	bitrate := "35000"
 	switch quality {
+	case "1440":
+		bitrate = "16000"
 	case "1080":
 		bitrate = "8000"
 	case "720":
 		bitrate = "5000"
 	case "480":
 		bitrate = "2500"
+	case "360":
+		bitrate = "1500"
 	}
 
 	cmd := exec.CommandContext(ctx, l.ytdlpPath, "--js-runtimes", fmt.Sprintf("quickjs:%s", l.qjsPath), "--no-restrict-filenames", "-o", "%(title)s.%(ext)s", "-f", fmt.Sprintf("bv*[height<=%s][vbr<=%s]+ba/b", quality, bitrate), link)

@@ -42,6 +42,8 @@ A simple video and audio downloader consisting of a browser extension and a Go a
 4. Click the "Download" button and wait.
 5. Check your chosen folder.
 
+#### Notes
+* *When downloading large videos in high quality, select the default platform format (like WebM for YouTube or MP4 for Rutube) because converting takes too much time and resources.*
 * *Temporary files (`.part`) or videos in transitional formats may appear during the download process. Please do not modify or delete them; they will be automatically removed once the download is complete.*
 
 #### Third-Party Licenses
@@ -95,6 +97,8 @@ This project is licensed under the **GPL-3.0 License** — see the `LICENSE` fil
 4. Нажмите кнопку "Скачать" и ожидайте загрузки (чем больше видео, тем дольше она будет идти)
 5. Проверьте папку, которую указывали в настройках
 
+#### Примечания:
+* *При загрузке больших видео в высоком разрешении выбирайте стандартный формат платформы (например, WebM для YouTube или MP4 для Rutube), потому что конвертация требует много времени и ресурсов*
 * *Во время загрузки могут создаваться временные файлы (`.part`) или видео в неправильном формате, не трогайте их, они сами удалятся после окончания загрузки*
 
 #### Лицензии третьих сторон

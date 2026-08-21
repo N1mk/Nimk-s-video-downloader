@@ -35,6 +35,8 @@ func (c *DefaultConvertor) Convert(ctx context.Context, dir string, fileName str
 
 	newFileName = strings.TrimSuffix(fileName, filepath.Ext(fileName)) + "." + extension
 
+	fmt.Println(newFileName)
+
 	cmd := exec.CommandContext(ctx, c.ffmpegPath, "-threads", "2", "-i", fileName, "-preset", "veryfast", newFileName)
 	cmd.Dir = dir
 	setPlatformSysProcAttr(cmd)

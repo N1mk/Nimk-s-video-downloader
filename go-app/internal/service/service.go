@@ -165,8 +165,6 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 				}
 			}
 
-			s.dl.LogInfo(fileName)
-
 			newFileName, err := s.con.Convert(job.Ctx, s.downloadPath, fileName, job.Extension)
 			if err != nil {
 				s.dl.LogError(fmt.Sprintf("Worker %d error: convert error: %s", id, err.Error()))
@@ -194,7 +192,7 @@ func (s *DownloadService) tryDownload(job *DownloadJob) (fileName string, ok boo
 	fileName, err1 := s.loa.GetFileName(job.Ctx, job.Link)
 
 	oldExt := filepath.Ext(fileName)
-	pathToFile := strings.TrimSuffix(filepath.Join(s.downloadPath, fileName), oldExt) + "." + job.Extension
+	pathToFile := strings.TrimSuffix(filepath.Join(s.downloadPath, fileName), oldExt) + fmt.Sprintf("(%sp)", job.Quality) + "." + job.Extension
 
 	_, err = os.Stat(pathToFile)
 	if err == nil {
