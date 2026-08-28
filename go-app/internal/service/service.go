@@ -171,9 +171,9 @@ func (s *DefaultDownloadService) DownloaderWorker(ctx context.Context, in <-chan
 				}
 			}
 
-			if job.Extension != "default" {
-				fileName = strings.NewReplacer(":", "：", "|", "｜", `"`, "＂", "/", "⧸").Replace(fileName)
+			fileName = strings.NewReplacer(":", "：", "|", "｜", `"`, "＂", "/", "⧸").Replace(fileName)
 
+			if job.Extension != "default" {
 				fileName, err = s.con.Convert(job.Ctx, s.downloadPath, fileName, job.Extension)
 				if err != nil {
 					s.dl.LogError(fmt.Sprintf("Worker %d error: convert error: %s", id, err.Error()))
@@ -183,8 +183,8 @@ func (s *DefaultDownloadService) DownloaderWorker(ctx context.Context, in <-chan
 				}
 			}
 
-			newPathToFile := filepath.Join(s.downloadPath, fileName)
-			if err := os.Rename(newPathToFile, strings.TrimSuffix(newPathToFile, filepath.Ext(fileName))+fmt.Sprintf("(%sp).%s", job.Quality, filepath.Ext(fileName))); err != nil {
+			pathToFile := filepath.Join(s.downloadPath, fileName)
+			if err := os.Rename(pathToFile, strings.TrimSuffix(pathToFile, filepath.Ext(fileName))+fmt.Sprintf("(%sp).%s", job.Quality, filepath.Ext(fileName))); err != nil {
 				s.dl.LogError(fmt.Sprintf("Worker %d error: rename error: %s", id, err.Error()))
 				job.Status = JobStatusError
 				job.Error = err
