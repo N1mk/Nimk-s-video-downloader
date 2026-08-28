@@ -30,13 +30,13 @@ type ExportJob struct {
 
 type ExtensionHandler struct {
 	ctx context.Context
-	svc *service.DownloadService
+	svc service.DownloadService
 	dl  *logger.DownloaderLogger
 	cr  *config.ConfigReader
 	loa *loader.DefaultLoader
 }
 
-func NewExtensionHandler(ctx context.Context, svc *service.DownloadService, dl *logger.DownloaderLogger, cr *config.ConfigReader, loa *loader.DefaultLoader) *ExtensionHandler {
+func NewExtensionHandler(ctx context.Context, svc service.DownloadService, dl *logger.DownloaderLogger, cr *config.ConfigReader, loa *loader.DefaultLoader) *ExtensionHandler {
 	return &ExtensionHandler{ctx: ctx, svc: svc, dl: dl, cr: cr, loa: loa}
 }
 
@@ -50,7 +50,7 @@ func (h *ExtensionHandler) PostDownload(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.svc.Download(h.ctx, data.ID, data.URL, data.Extension, data.Quality)
+	h.svc.Download(&service.DownloadJob{Ctx: h.ctx, ID: data.ID, Link: data.URL, Extension: data.Extension, Quality: data.Quality})
 }
 
 func (h *ExtensionHandler) PostJobStatusRequest(w http.ResponseWriter, r *http.Request) {

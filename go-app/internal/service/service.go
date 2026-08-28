@@ -33,7 +33,13 @@ type DownloadJob struct {
 	Error     error
 }
 
-type DownloadService struct {
+type DownloadService interface {
+	Download(job *DownloadJob)
+	GetJobByID(id int) (job *DownloadJob, err error)
+	ChangeConfiguration(config *config.Config)
+}
+
+type DefaultDownloadService struct {
 	ctx           context.Context
 	downloadPath  string
 	in            chan *DownloadJob
@@ -46,11 +52,11 @@ type DownloadService struct {
 	maxRetryCount int
 }
 
-func NewDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, loa *loader.DefaultLoader, con *convertor.DefaultConvertor, maxRetryCount int) *DownloadService {
-	return &DownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *DownloadJob), jobs: make([]*DownloadJob, 0), dl: dl, loa: loa, con: con, maxRetryCount: maxRetryCount}
+func NewDefaultDownloadService(ctx context.Context, downloadPath string, dl *logger.DownloaderLogger, loa *loader.DefaultLoader, con *convertor.DefaultConvertor, maxRetryCount int) *DefaultDownloadService {
+	return &DefaultDownloadService{ctx: ctx, downloadPath: downloadPath, in: make(chan *DownloadJob), jobs: make([]*DownloadJob, 0), dl: dl, loa: loa, con: con, maxRetryCount: maxRetryCount}
 }
 
-func (s *DownloadService) CreateWorkers(amount int) {
+func (s *DefaultDownloadService) CreateWorkers(amount int) {
 	for i := 0; i < amount; i++ {
 		s.workersCount += 1
 		s.Wg.Add(1)
@@ -58,15 +64,15 @@ func (s *DownloadService) CreateWorkers(amount int) {
 	}
 }
 
-func (s *DownloadService) Download(ctx context.Context, id int, link string, extension string, quality string) {
-	job := &DownloadJob{ID: id, Ctx: ctx, Link: link, Extension: extension, Quality: quality, Status: JobStatusInProcess}
+func (s *DefaultDownloadService) Download(job *DownloadJob) {
+	job.Status = JobStatusInProcess
 
 	s.jobs = append(s.jobs, job)
 
 	s.in <- job
 }
 
-func (s *DownloadService) GetJobByID(id int) (job *DownloadJob, err error) {
+func (s *DefaultDownloadService) GetJobByID(id int) (job *DownloadJob, err error) {
 	for _, job := range s.jobs {
 		if job.ID == id {
 			return job, nil
@@ -76,12 +82,12 @@ func (s *DownloadService) GetJobByID(id int) (job *DownloadJob, err error) {
 	return nil, project_errors.ErrNotFound
 }
 
-func (s *DownloadService) ChangeConfiguration(config *config.Config) {
+func (s *DefaultDownloadService) ChangeConfiguration(config *config.Config) {
 	s.downloadPath = config.DownloadPath
 	s.maxRetryCount = config.MaxRetryCount
 }
 
-func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *DownloadJob, id int) {
+func (s *DefaultDownloadService) DownloaderWorker(ctx context.Context, in <-chan *DownloadJob, id int) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -165,6 +171,8 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 				}
 			}
 
+			fileName = strings.NewReplacer(":", "：", "|", "｜", `"`, "＂", "/", "⧸").Replace(fileName)
+
 			newFileName, err := s.con.Convert(job.Ctx, s.downloadPath, fileName, job.Extension)
 			if err != nil {
 				s.dl.LogError(fmt.Sprintf("Worker %d error: convert error: %s", id, err.Error()))
@@ -188,7 +196,7 @@ func (s *DownloadService) DownloaderWorker(ctx context.Context, in <-chan *Downl
 	}
 }
 
-func (s *DownloadService) tryDownload(job *DownloadJob) (fileName string, ok bool, err error) {
+func (s *DefaultDownloadService) tryDownload(job *DownloadJob) (fileName string, ok bool, err error) {
 	fileName, err1 := s.loa.GetFileName(job.Ctx, job.Link)
 
 	oldExt := filepath.Ext(fileName)
@@ -214,3 +222,21 @@ func (s *DownloadService) tryDownload(job *DownloadJob) (fileName string, ok boo
 
 	return fileName, true, nil
 }
+
+type MockDownloadService struct {
+	Jobs []*DownloadJob
+}
+
+func (m *MockDownloadService) Download(job *DownloadJob) {}
+
+func (m *MockDownloadService) GetJobByID(id int) (job *DownloadJob, err error) {
+	for _, job := range m.Jobs {
+		if job.ID == id {
+			return job, nil
+		}
+	}
+
+	return nil, project_errors.ErrNotFound
+}
+
+func (m *MockDownloadService) ChangeConfiguration(config *config.Config) {}

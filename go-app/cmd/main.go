@@ -85,7 +85,7 @@ func main() {
 	ctx, close := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer close()
 
-	svc := service.NewDownloadService(ctx, config.DownloadPath, dl, loa, con, config.MaxRetryCount)
+	svc := service.NewDefaultDownloadService(ctx, config.DownloadPath, dl, loa, con, config.MaxRetryCount)
 
 	svc.CreateWorkers(5)
 
