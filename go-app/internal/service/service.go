@@ -184,7 +184,13 @@ func (s *DefaultDownloadService) DownloaderWorker(ctx context.Context, in <-chan
 			}
 
 			pathToFile := filepath.Join(s.downloadPath, fileName)
-			if err := os.Rename(pathToFile, strings.TrimSuffix(pathToFile, filepath.Ext(fileName))+fmt.Sprintf("(%sp).%s", job.Quality, filepath.Ext(fileName))); err != nil {
+
+			quality := job.Quality
+			if quality != "default" {
+				quality = quality + "p"
+			}
+
+			if err := os.Rename(pathToFile, strings.TrimSuffix(pathToFile, filepath.Ext(fileName))+fmt.Sprintf("(%s)%s", quality, filepath.Ext(fileName))); err != nil {
 				s.dl.LogError(fmt.Sprintf("Worker %d error: rename error: %s", id, err.Error()))
 				job.Status = JobStatusError
 				job.Error = err

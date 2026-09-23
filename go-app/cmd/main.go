@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"time"
 
+	_ "net/http/pprof"
 	"nvd/internal/service"
 	"os"
 
@@ -114,6 +115,8 @@ func main() {
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		w.WriteHeader(http.StatusOK)
 	})
+
+	go func() { http.ListenAndServe("localhost:6060", nil) }()
 
 	go http.ListenAndServe("localhost:8080", r)
 
